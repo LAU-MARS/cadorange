@@ -1,0 +1,37 @@
+{
+  "name": "@cadorange/render",
+  "version": "0.0.0",
+  "description": "Headless multi-view rendering (PNG/SVG) for cadorange.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LAU-MARS/cadorange.git",
+    "directory": "packages/render"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cadorange": "workspace:*"
+  }
+}

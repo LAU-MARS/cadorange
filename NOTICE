@@ -1,0 +1,12 @@
+cadorange
+Copyright 2026 The cadorange authors
+
+This product is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. See LICENSE.
+
+This product includes OpenCASCADE Technology (OCCT), Copyright (c) Open CASCADE
+S.A.S. and contributors, licensed under the GNU Lesser General Public License
+version 2.1 with the OCCT library exception, as compiled to WebAssembly and
+consumed through the occt.ts bindings.
+
+OCCT source and license texts: https://github.com/Open-Cascade-SAS/OCCT

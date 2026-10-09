@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/cadorange"><img src="https://img.shields.io/npm/v/cadorange?color=f97316" alt="npm" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license" /></a>
+  <a href="https://github.com/LAU-MARS/cadorange/actions/workflows/ci.yml"><img src="https://github.com/LAU-MARS/cadorange/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
 </p>
 
 <p align="center">
