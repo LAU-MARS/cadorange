@@ -166,7 +166,7 @@ const views = await s.render({ views: ["iso", "top", "front"], size: 512 }); // 
 
 ## Relationship to build123d and CadQuery
 
-cadorange is inspired by build123d and CadQuery. We think they are the best code-CAD APIs available, and LLMs already know them well.
+cadorange is inspired by [build123d](https://github.com/gumyr/build123d) and [CadQuery](https://github.com/CadQuery/cadquery). We think they are the best code-CAD APIs available, and LLMs already know them well.
 
 - The core API follows build123d's explicit object model (`Box`, `Cylinder`, `fillet`, `Axis`, `ShapeList.filterBy/groupBy/sortBy`). Python operator overloading (`a - b`) becomes methods (`a.cut(b)`).
 - `cadorange/workplane` provides a thin CadQuery-style fluent facade with string selectors (`">Z"`, `"|Z"`).
