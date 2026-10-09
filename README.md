@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/logo.svg" width="120" alt="cadorange" />
+  <img src="./assets/banner.png" alt="cadorange" />
 </p>
 
 <h1 align="center">cadorange</h1>
