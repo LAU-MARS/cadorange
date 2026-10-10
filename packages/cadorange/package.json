@@ -38,5 +38,11 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "occt.ts": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4"
   }
 }

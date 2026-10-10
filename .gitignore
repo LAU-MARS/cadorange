@@ -7,3 +7,4 @@ coverage/
 .vite/
 test-results/
 playwright-report/
+.reference/

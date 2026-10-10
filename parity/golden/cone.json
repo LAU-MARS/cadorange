@@ -1,0 +1,24 @@
+{
+  "name": "cone",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 3665.1914291880917,
+    "area": 1364.1829574548635,
+    "bboxMin": [
+      -10.0,
+      -10.0,
+      0.0
+    ],
+    "bboxMax": [
+      10.0,
+      10.0,
+      20.0
+    ],
+    "faces": 3,
+    "edges": 3,
+    "valid": true
+  }
+}

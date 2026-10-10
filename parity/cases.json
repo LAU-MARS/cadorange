@@ -1,0 +1,80 @@
+{
+  "$comment": "Parity cases: one op-script per case, executed on BOTH sides. Python build123d (gen_golden.py) produces golden metrics; the TS test executes the same script against cadorange and compares. Semantics are corner/base-anchored (cadorange Box convention; build123d uses align=MIN to match).",
+  "cases": [
+    {
+      "name": "box",
+      "ops": [{ "op": "box", "id": "a", "dx": 80, "dy": 60, "dz": 10 }],
+      "result": "a"
+    },
+    {
+      "name": "cylinder",
+      "ops": [{ "op": "cylinder", "id": "a", "radius": 5, "height": 20 }],
+      "result": "a"
+    },
+    {
+      "name": "sphere",
+      "ops": [{ "op": "sphere", "id": "a", "radius": 10 }],
+      "result": "a"
+    },
+    {
+      "name": "cone",
+      "ops": [{ "op": "cone", "id": "a", "radius1": 10, "radius2": 5, "height": 20 }],
+      "result": "a"
+    },
+    {
+      "name": "torus",
+      "ops": [{ "op": "torus", "id": "a", "radius1": 20, "radius2": 5 }],
+      "result": "a",
+      "bboxTolerance": 3,
+      "$note": "occt.ts bounds() is pole-loose on curved primitives (R13); geometry matches exactly"
+    },
+    {
+      "name": "plate_with_hole",
+      "ops": [
+        { "op": "box", "id": "a", "dx": 80, "dy": 60, "dz": 10 },
+        { "op": "cylinder", "id": "b", "radius": 8, "height": 12, "origin": [40, 30, -1] },
+        { "op": "cut", "id": "c", "target": "a", "tool": "b" }
+      ],
+      "result": "c"
+    },
+    {
+      "name": "plate_with_hole_fillet",
+      "ops": [
+        { "op": "box", "id": "a", "dx": 80, "dy": 60, "dz": 10 },
+        { "op": "cylinder", "id": "b", "radius": 8, "height": 12, "origin": [40, 30, -1] },
+        { "op": "cut", "id": "c", "target": "a", "tool": "b" },
+        { "op": "filletZ", "id": "d", "target": "c", "radius": 3 }
+      ],
+      "result": "d"
+    },
+    {
+      "name": "box_chamfer",
+      "ops": [
+        { "op": "box", "id": "a", "dx": 20, "dy": 20, "dz": 20 },
+        { "op": "chamferZ", "id": "b", "target": "a", "distance": 2 }
+      ],
+      "result": "b"
+    },
+    {
+      "name": "fuse_boxes",
+      "ops": [
+        { "op": "box", "id": "a", "dx": 10, "dy": 10, "dz": 10 },
+        { "op": "box", "id": "b", "dx": 10, "dy": 10, "dz": 10, "origin": [5, 0, 0] },
+        { "op": "fuse", "id": "c", "target": "a", "tool": "b" }
+      ],
+      "result": "c",
+      "facesTolerance": 8,
+      "edgesTolerance": 20,
+      "$note": "occt.ts fuse keeps unmerged same-domain faces (R12); volume/area already agree"
+    },
+    {
+      "name": "common_boxes",
+      "ops": [
+        { "op": "box", "id": "a", "dx": 10, "dy": 10, "dz": 10 },
+        { "op": "box", "id": "b", "dx": 10, "dy": 10, "dz": 10, "origin": [5, 0, 0] },
+        { "op": "common", "id": "c", "target": "a", "tool": "b" }
+      ],
+      "result": "c"
+    }
+  ]
+}

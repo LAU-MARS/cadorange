@@ -10,3 +10,11 @@ version 2.1 with the OCCT library exception, as compiled to WebAssembly and
 consumed through the occt.ts bindings.
 
 OCCT source and license texts: https://github.com/Open-Cascade-SAS/OCCT
+
+The public API semantics (ShapeList filter/group/sort behavior, selector
+predicates, algebra-mode operation names and placement conventions) are ported
+from build123d, Copyright (c) 2021 Roger Maitland, licensed under the Apache
+License, Version 2.0. Source: https://github.com/gumyr/build123d
+
+Portions of the parity test suite (parity/) derive from build123d examples
+and behavior specifications under the same license.

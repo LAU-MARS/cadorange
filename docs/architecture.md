@@ -1,7 +1,14 @@
 # cadorange 架构(M0 骨架)
 
-本仓库当前是**接口先行**的骨架:目录、工具链、核心类型已就位,所有实现函数统一抛
-`NotImplementedError`,等待 M0 逐个填充。本文记录既定架构决策,实现时不要偏离。
+本仓库 M0 核心垂直切片已落地(2026-10-10):kernel 适配层、geom/topo/selectors、
+五原语、布尔、fillet/chamfer、workplane 门面、STEP/STL/GLB IO、record() 记账,
+以及 parity 对拍 harness(10/10 通过)。`runtime`/`render`/`mcp` 仍是接口骨架。
+本文记录既定架构决策,实现时不要偏离。
+
+> 关键事实:occt.ts 是**高层 API**(非 OCP 式类树镜像)——子形状按 describe() 的
+> 1-based 索引寻址而非句柄、变换立即执行、审问走 JSON 元数据。Kernel 接口已按
+> 此现实修订;缺口(子形状句柄、质心、同域合并等)统一登记在
+> [occt-requirements.md](./occt-requirements.md),往下推、不在上层绕。
 
 ## 1. 仓库结构
 
@@ -82,4 +89,7 @@ publishConfig 生效**(发布产物必须指向 dist)。
 ## 6. parity
 
 CI 的 `parity` job 仅 `workflow_dispatch` 手动触发:Python build123d 为参考实现,
-对拍体积/面积/bbox 等标量,脚本在 `parity/`。
+对拍体积/面积/bbox/面边数等标量。流程:`parity/cases.json`(两侧共用的 op 脚本)
+→ `gen_golden.py` 生成 `parity/golden/*.json` → `packages/cadorange/test/parity.test.ts`
+断言。goldens 缺失的用例自动跳过,所以无 Python 环境也能跑常规 CI。
+"对标"的度量口径就是它:passed/total。

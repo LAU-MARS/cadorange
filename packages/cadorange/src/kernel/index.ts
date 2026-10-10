@@ -1,3 +1,12 @@
 export type { InitOptions } from "./occt";
-export { createOcctKernel, init } from "./occt";
-export type { Kernel, ShapeHandle } from "./types";
+export { getKernel, init, resetKernel } from "./occt";
+export type {
+  CurveKind,
+  EdgeMeta,
+  FaceMeta,
+  HoleMeta,
+  Kernel,
+  ShapeHandle,
+  ShapeMeta,
+  SurfaceKind,
+} from "./types";

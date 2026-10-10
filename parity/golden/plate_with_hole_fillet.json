@@ -1,0 +1,24 @@
+{
+  "name": "plate_with_hole_fillet",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 45912.12404052561,
+    "area": 12433.575191894877,
+    "bboxMin": [
+      -4.440892098500626e-16,
+      -4.440892098500626e-16,
+      0.0
+    ],
+    "bboxMax": [
+      80.0,
+      60.0,
+      10.0
+    ],
+    "faces": 11,
+    "edges": 27,
+    "valid": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "cylinder",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 1570.7963267948965,
+    "area": 785.3981633974482,
+    "bboxMin": [
+      -5.0,
+      -5.0,
+      0.0
+    ],
+    "bboxMax": [
+      5.0,
+      5.0,
+      20.0
+    ],
+    "faces": 3,
+    "edges": 3,
+    "valid": true
+  }
+}

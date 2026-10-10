@@ -1,26 +1,44 @@
-import type { Edge, ShapeList, Solid } from "../topo";
+/**
+ * Modeling operations, build123d algebra-mode names. Every op records through
+ * the shared `record()` entry (docs/architecture.md §3.3).
+ */
+
+import type { Edge, Shape, ShapeList, Solid } from "../topo";
 import { todo } from "../util";
 
 export type BooleanOp = "fuse" | "cut" | "common";
 
-export function fuse(_a: Solid, _b: Solid): Solid {
-  todo("fuse");
+export function fuse(a: Solid, b: Shape): Solid {
+  return a.fuse(b);
 }
 
-export function cut(_a: Solid, _b: Solid): Solid {
-  todo("cut");
+export function cut(a: Solid, b: Shape): Solid {
+  return a.cut(b);
 }
 
-export function common(_a: Solid, _b: Solid): Solid {
-  todo("common");
+/** build123d `intersect` — OCCT `common`. */
+export function intersect(a: Solid, b: Shape): Solid {
+  return a.common(b);
 }
 
-export function fillet(_s: Solid, _edges: ShapeList<Edge> | Edge[], _radius: number): Solid {
-  todo("fillet");
+/** Keep the OCCT name for code translated from CadQuery. */
+export const common = intersect;
+
+export function fillet(s: Shape, edges: ShapeList<Edge> | readonly Edge[], radius: number): Solid {
+  return s.fillet(edges, radius);
 }
 
-export function chamfer(_s: Solid, _edges: ShapeList<Edge> | Edge[], _distance: number): Solid {
-  todo("chamfer");
+/** Equal-distance chamfer; asymmetric needs kernel support (R3). */
+export function chamfer(
+  s: Shape,
+  edges: ShapeList<Edge> | readonly Edge[],
+  distance: number,
+): Solid {
+  return s.chamfer(edges, distance);
+}
+
+export function translate(s: Shape, by: readonly [number, number, number]): Solid {
+  return s.translate(by);
 }
 
 /** M1: extrude a 2D sketch into a solid. */

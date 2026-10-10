@@ -33,7 +33,15 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3(@types/node@26.6.4)(@vitest/browser-playwright@5.0.3)(@vitest/ui@5.0.3)(vite@8.3.3(@types/node@26.6.4)(yaml@2.9.1))
 
-  packages/cadorange: {}
+  packages/cadorange:
+    dependencies:
+      occt.ts:
+        specifier: ^0.7.0
+        version: 0.7.0
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.4
+        version: 26.6.4
 
   packages/mcp:
     dependencies:
@@ -56,12 +64,20 @@ importers:
       cadorange:
         specifier: workspace:*
         version: link:../cadorange
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.4
+        version: 26.6.4
 
   packages/runtime:
     dependencies:
       cadorange:
         specifier: workspace:*
         version: link:../cadorange
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.4
+        version: 26.6.4
 
 packages:
 
@@ -705,6 +721,11 @@ packages:
   obug@3.0.0:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
+
+  occt.ts@0.7.0:
+    resolution: {integrity: sha512-zF+l7mAKgGM5FqaBSJRr0h/DQWyX4QA9LTUjPepgEW4JZdUXKga/mpsKflNr9YgE/gDc4wV/PSS53B3htcn6kg==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   package-manager-detector@1.9.0:
     resolution: {integrity: sha512-zAMfbta9nPA8AKkA4WdmNAT8R8s6Dk0/xwPsqNnRidMFcLo1YkLuPDTgs2f64XdzS8vbLNnoJ+uUIkgbz7oRHA==}
@@ -1492,6 +1513,8 @@ snapshots:
   obug@2.2.1: {}
 
   obug@3.0.0: {}
+
+  occt.ts@0.7.0: {}
 
   package-manager-detector@1.9.0: {}
 

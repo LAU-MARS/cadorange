@@ -1,0 +1,24 @@
+{
+  "name": "plate_with_hole",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 45989.38070170253,
+    "area": 12500.530964914873,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      80.0,
+      60.0,
+      10.0
+    ],
+    "faces": 7,
+    "edges": 15,
+    "valid": true
+  }
+}

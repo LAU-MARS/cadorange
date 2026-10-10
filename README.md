@@ -52,7 +52,7 @@ let part = plate.cut(hole);
 part = fillet(part.edges().filterBy(Axis.Z), 3);
 
 console.log(part.describe());
-// { volume: 45989.4, bbox: [80, 60, 10], faces: 11, edges: 26, valid: true }
+// { volume: 45912.12, bbox: [80, 60, 10], faces: 11, edges: 27, valid: true }
 
 await part.export("plate.step");
 await part.export("plate.stl", { tolerance: 0.05 });

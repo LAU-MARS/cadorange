@@ -1,0 +1,24 @@
+{
+  "name": "box",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 48000.0,
+    "area": 12399.999999999996,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      80.0,
+      60.0,
+      10.0
+    ],
+    "faces": 6,
+    "edges": 12,
+    "valid": true
+  }
+}
