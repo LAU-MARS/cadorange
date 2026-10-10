@@ -43,42 +43,6 @@ importers:
         specifier: ^26.6.4
         version: 26.6.4
 
-  packages/mcp:
-    dependencies:
-      cadorange:
-        specifier: workspace:*
-        version: link:../cadorange
-      cadorange-render:
-        specifier: workspace:*
-        version: link:../render
-      cadorange-runtime:
-        specifier: workspace:*
-        version: link:../runtime
-    devDependencies:
-      '@types/node':
-        specifier: ^26.6.4
-        version: 26.6.4
-
-  packages/render:
-    dependencies:
-      cadorange:
-        specifier: workspace:*
-        version: link:../cadorange
-    devDependencies:
-      '@types/node':
-        specifier: ^26.6.4
-        version: 26.6.4
-
-  packages/runtime:
-    dependencies:
-      cadorange:
-        specifier: workspace:*
-        version: link:../cadorange
-    devDependencies:
-      '@types/node':
-        specifier: ^26.6.4
-        version: 26.6.4
-
 packages:
 
   '@biomejs/biome@2.5.15':

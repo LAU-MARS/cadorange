@@ -1,5 +1,5 @@
-import type { Shape } from "cadorange";
-import { todo } from "./util";
+import type { Shape } from "../index";
+import { todo } from "../util";
 
 export type View = "iso" | "top" | "front" | "back" | "left" | "right" | "bottom";
 

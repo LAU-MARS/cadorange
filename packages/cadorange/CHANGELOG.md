@@ -1,5 +1,13 @@
 # cadorange
 
+## 0.3.0
+
+### Minor Changes
+
+- Consolidate to a single npm package (like build123d).
+  
+  `cadorange` now ships everything via subpath exports: `cadorange/workplane` (shipped), `cadorange/runtime`, `cadorange/render` and `cadorange/mcp` (interface skeletons, landing with M0.5/M2), plus the `cado` CLI as the package bin (`npx -y cadorange ...`). The former separate workspace packages are merged in — no version-skew matrix, one install, one release train.
+
 ## 0.2.0
 
 ### Minor Changes

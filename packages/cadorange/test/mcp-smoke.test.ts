@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { main } from "../src/cli";
-import { startMcpServer } from "../src/index";
+import { startMcpServer } from "../src/mcp";
 
 describe("cado CLI skeleton", () => {
   it("prints usage for --help and exits 0", () => {

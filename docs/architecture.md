@@ -15,19 +15,20 @@
 ```
 cadorange/
 ├─ packages/
-│  ├─ cadorange/            # 核心建模 API
-│  │  ├─ src/
-│  │  │  ├─ kernel/         # occt.ts 适配层(唯一直接碰 OCCT 的地方)
-│  │  │  ├─ geom/           # Vector, Axis, Plane, Location
-│  │  │  ├─ topo/           # Shape, Solid, Face, Edge, ShapeList
-│  │  │  ├─ primitives/     # Box, Cylinder, Sphere, Cone, Torus
-│  │  │  ├─ ops/            # boolean, fillet, chamfer, extrude, revolve...
-│  │  │  ├─ selectors/      # filterBy/groupBy/sortBy + 字符串选择器解析
-│  │  │  ├─ io/             # STEP/STL/GLB/BREP
-│  │  │  └─ workplane/      # CadQuery 风格外观(子路径导出 cadorange/workplane)
-│  ├─ runtime/              # Session, OpLog, Snapshot, OpError, 沙箱
-│  ├─ render/               # 无头多视图渲染
-│  └─ mcp/                  # MCP server + `cado` CLI
+│  └─ cadorange/            # 唯一的发布包(单包策略,子路径导出)
+│     ├─ src/
+│     ├─ kernel/            # occt.ts 适配层(唯一直接碰 OCCT 的地方)
+│     ├─ geom/              # Vector, Axis, Plane, Location
+│     ├─ topo/              # Shape, Solid, Face, Edge, ShapeList
+│     ├─ primitives/        # Box, Cylinder, Sphere, Cone, Torus
+│     ├─ ops/               # boolean, fillet, chamfer, extrude, revolve...
+│     ├─ selectors/         # filterBy/groupBy/sortBy + 字符串选择器解析
+│     ├─ io/                # STEP/STL/GLB/BREP
+│     ├─ workplane/         # CadQuery 风格外观(cadorange/workplane)
+│     ├─ runtime/           # Session, OpLog, Snapshot, OpError, 沙箱(cadorange/runtime)
+│     ├─ render/            # 无头多视图渲染(cadorange/render)
+│     ├─ mcp/               # MCP server(cadorange/mcp)
+│     └─ cli.ts             # `cado` CLI(bin)
 ├─ examples/
 ├─ bench/                   # CADGenBench 适配、成功率统计
 ├─ parity/                  # CI 中用 Python build123d 做几何对照
@@ -47,7 +48,7 @@ cadorange/
 | 构建 | tsdown | 只发 ESM,`exports` 子路径,`publishConfig` 发版时切到 dist |
 | 测试 | vitest + browser mode(Playwright) | Node 与 Chromium 双跑 |
 | Lint/格式 | Biome | `biome.json` |
-| 发版 | Changesets | **发布策略(2026-10-10 定)**:不注册 npm org,子包用无 scope 的 `cadorange-*` 前缀;npm 只发真实现(骨架不发);GitHub Release 挂本仓库 |
+| 发版 | Changesets | **发布策略(2026-10-10 定)**:单包 `cadorange` 全量发布(对标 build123d),其余能力为子路径导出(`cadorange/workplane` `/runtime` `/render` `/mcp`),`cado` 为主包 bin;GitHub Release 挂本仓库 |
 | CI | GitHub Actions | lint → typecheck → test(node) → test(browser) → parity(手动) |
 | TS | strict, target ES2022, moduleResolution bundler | 根 `tsconfig.json` |
 

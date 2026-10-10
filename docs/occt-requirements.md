@@ -20,7 +20,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **证据**：Node 中 `writeStep()` 向 **stdout** 打印
   `Statistics on Transfer ... Step File Name : /mem/occt_out.step (776 ents) Write Done`
   （2026-10-10 冒烟测试实测；stderr 屏蔽后仍在，stdout 屏蔽后消失）。
-- **影响**：`cadorange-mcp` 的 stdio transport 协议流被污染（MCP 帧外的文本即致命）；
+- **影响**：cadorange MCP server(`cadorange/mcp`)的 stdio transport 协议流被污染（MCP 帧外的文本即致命）；
   `cado` CLI 输出不干净；agent 场景 stdout 常被当作结构化结果捕获。
 - **建议**：默认静音（移除/降级 `Message_Printer`，或重定向 stderr）；
   如需诊断，`OccSession.create({ verbose: true })` 显式开启。

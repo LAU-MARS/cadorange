@@ -1,6 +1,6 @@
-import type { Describe } from "cadorange";
+import type { Describe } from "../index";
+import { todo } from "../util";
 import type { Limits, Op, RunResult, SessionOptions, Snapshot } from "./types";
-import { todo } from "./util";
 
 export interface RenderOpts {
   views?: string[];

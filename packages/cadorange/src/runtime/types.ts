@@ -1,4 +1,4 @@
-import type { Describe } from "cadorange";
+import type { Describe } from "../index";
 
 export type Op = {
   id: number;
