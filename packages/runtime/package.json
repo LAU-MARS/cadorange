@@ -1,5 +1,5 @@
 {
-  "name": "@cadorange/runtime",
+  "name": "cadorange-runtime",
   "version": "0.1.1",
   "description": "Session, op log, snapshots, structured errors and sandboxed execution for cadorange.",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@cadorange/mcp",
+  "name": "cadorange-mcp",
   "version": "0.1.1",
   "description": "MCP server and the cado CLI for cadorange.",
   "type": "module",
@@ -34,8 +34,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cadorange/render": "workspace:*",
-    "@cadorange/runtime": "workspace:*",
+    "cadorange-render": "workspace:*",
+    "cadorange-runtime": "workspace:*",
     "cadorange": "workspace:*"
   },
   "devDependencies": {

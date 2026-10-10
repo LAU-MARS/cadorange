@@ -45,15 +45,15 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@cadorange/render':
-        specifier: workspace:*
-        version: link:../render
-      '@cadorange/runtime':
-        specifier: workspace:*
-        version: link:../runtime
       cadorange:
         specifier: workspace:*
         version: link:../cadorange
+      cadorange-render:
+        specifier: workspace:*
+        version: link:../render
+      cadorange-runtime:
+        specifier: workspace:*
+        version: link:../runtime
     devDependencies:
       '@types/node':
         specifier: ^26.6.4

@@ -72,10 +72,13 @@ const part = new Workplane("XY")
 
 ### As an MCP server
 
+> **Status: planned (M2).** The server ships as `cadorange-mcp` when the runtime
+> lands; until then the commands below are the target integration shape.
+
 **Claude Code**
 
 ```bash
-claude mcp add cadorange -- npx -y @cadorange/mcp
+claude mcp add cadorange -- npx -y cadorange-mcp
 ```
 
 **Codex (`~/.codex/config.toml`)**
@@ -83,7 +86,7 @@ claude mcp add cadorange -- npx -y @cadorange/mcp
 ```toml
 [mcp_servers.cadorange]
 command = "npx"
-args = ["-y", "@cadorange/mcp"]
+args = ["-y", "cadorange-mcp"]
 ```
 
 **dsh**
@@ -93,7 +96,7 @@ dsh ships with cadorange support. Add it as an MCP server in dsh's settings:
 ```json
 {
   "mcpServers": {
-    "cadorange": { "command": "npx", "args": ["-y", "@cadorange/mcp"] }
+    "cadorange": { "command": "npx", "args": ["-y", "cadorange-mcp"] }
   }
 }
 ```
@@ -103,7 +106,7 @@ dsh ships with cadorange support. Add it as an MCP server in dsh's settings:
 ```json
 {
   "mcpServers": {
-    "cadorange": { "command": "npx", "args": ["-y", "@cadorange/mcp"] }
+    "cadorange": { "command": "npx", "args": ["-y", "cadorange-mcp"] }
   }
 }
 ```
@@ -117,8 +120,10 @@ npx cado describe model.ts --json
 
 ### The agent runtime
 
+> **Status: planned (M0.5).** Interface skeleton only for now.
+
 ```ts
-import { Session } from "@cadorange/runtime";
+import { Session } from "cadorange-runtime";
 
 const s = await Session.create({ limits: { timeoutMs: 10_000, memoryMB: 512 } });
 
@@ -151,12 +156,12 @@ const views = await s.render({ views: ["iso", "top", "front"], size: 512 }); // 
 
 ## Packages
 
-| Package | Description |
-| --- | --- |
-| `cadorange` | Core modeling API: shapes, selectors, booleans, features, import/export |
-| `@cadorange/runtime` | Session, op log, snapshots, structured errors, sandboxed execution |
-| `@cadorange/render` | Headless multi-view rendering (PNG/SVG) |
-| `@cadorange/mcp` | MCP server and the `cado` CLI |
+| Package | Description | Status |
+| --- | --- | --- |
+| `cadorange` | Core modeling API: shapes, selectors, booleans, features, import/export | [![npm](https://img.shields.io/npm/v/cadorange?color=f97316)](https://www.npmjs.com/package/cadorange) |
+| `cadorange-runtime` | Session, op log, snapshots, structured errors, sandboxed execution | unreleased — interface skeleton |
+| `cadorange-render` | Headless multi-view rendering (PNG/SVG) | unreleased — interface skeleton |
+| `cadorange-mcp` | MCP server and the `cado` CLI | unreleased — interface skeleton |
 
 ## Why TypeScript?
 

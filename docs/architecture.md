@@ -47,7 +47,7 @@ cadorange/
 | 构建 | tsdown | 只发 ESM,`exports` 子路径,`publishConfig` 发版时切到 dist |
 | 测试 | vitest + browser mode(Playwright) | Node 与 Chromium 双跑 |
 | Lint/格式 | Biome | `biome.json` |
-| 发版 | Changesets | 先发 0.0.x 占位 |
+| 发版 | Changesets | **发布策略(2026-10-10 定)**:不注册 npm org,子包用无 scope 的 `cadorange-*` 前缀;npm 只发真实现(骨架不发);GitHub Release 挂本仓库 |
 | CI | GitHub Actions | lint → typecheck → test(node) → test(browser) → parity(手动) |
 | TS | strict, target ES2022, moduleResolution bundler | 根 `tsconfig.json` |
 
