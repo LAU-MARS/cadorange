@@ -21,12 +21,16 @@ export type CurveKind = "line" | "circle" | "ellipse" | "bspline" | "other";
 /**
  * Metadata for one face, normalized from the kernel's interrogation output.
  * `index` is the kernel's 1-based selection index (fillet/draft/shell targets).
+ *
+ * `center` is a reference point on the face's axis of symmetry where one
+ * exists (kernel `axisPoint` — cylinder/cone/sphere/torus), the integral
+ * centroid for planes and generic surfaces. Selection semantics key on it;
+ * occt.ts ≥0.10.0 reports both, we keep the axis-stable one.
  */
 export interface FaceMeta {
   readonly index: number;
   readonly surface: SurfaceKind;
   readonly area: number;
-  /** A reference point: plane origin, cylinder/cone axis point, sphere/torus center. */
   readonly center: Vec3;
   /** Plane only — unit normal. */
   readonly normal?: Vec3;
@@ -41,7 +45,11 @@ export interface EdgeMeta {
   readonly index: number;
   readonly curve: CurveKind;
   readonly length: number;
-  /** Line: midpoint. Circle/ellipse: center. Others: bounding-box midpoint. */
+  /**
+   * Line: midpoint. Circle/ellipse: the underlying circle/ellipse center
+   * (kernel `axisPoint`, not the arc's integral centroid — matches
+   * build123d selector semantics). Others: integral centroid.
+   */
   readonly center: Vec3;
   /** Line only — unit direction (start → end). */
   readonly direction?: Vec3;
@@ -92,7 +100,17 @@ export interface Kernel {
   makeCone(radius1: number, radius2: number, height: number, at?: Vec3): ShapeHandle;
   makeTorus(radius1: number, radius2: number, at?: Vec3): ShapeHandle;
 
-  boolean(op: "fuse" | "cut" | "common", a: ShapeHandle, b: ShapeHandle): ShapeHandle;
+  /**
+   * Booleans clean by default (UnifySameDomain — same as build123d/CadQuery):
+   * coplanar faces merge, collinear edges join. `clean: false` keeps raw
+   * fragment topology for callers that count fragments.
+   */
+  boolean(
+    op: "fuse" | "cut" | "common",
+    a: ShapeHandle,
+    b: ShapeHandle,
+    opts?: { clean?: boolean },
+  ): ShapeHandle;
 
   /** `edgeIndices` are 1-based indices into `meta(s).edges`. Empty = all edges. */
   fillet(s: ShapeHandle, radius: number, edgeIndices: number[]): ShapeHandle;

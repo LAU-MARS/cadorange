@@ -1,5 +1,14 @@
 # @cadorange/mcp
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies
+  - cadorange@0.2.0
+  - @cadorange/render@0.1.1
+  - @cadorange/runtime@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

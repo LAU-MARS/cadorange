@@ -30,8 +30,8 @@ pnpm vitest run packages/cadorange/test/parity.test.ts
   已知内核行为差异用用例级容差标注（`bboxTolerance` 等，对应
   docs/occt-requirements.md 的 R 编号，底层修复后应收紧）。
 
-## 当前状态（2026-10-10）
+## 当前状态（2026-10-10，occt.ts 0.10.0）
 
-10/10 通过。两处已标注待收紧项：fuse 的面/边计数（R12 同域合并）、
-torus bbox（R13 optimal bounds）。体积/面积与 build123d 全部一致
-（含 fillet/chamfer blend 用例）。
+10/10 通过，**全部用例在默认（最严）容差下**：体积/面积与 build123d 逐位一致
+（含 fillet/chamfer blend 用例），面/边计数完全一致，bbox 1e-4。
+fuse 同域合并与 optimal bbox 的历史放宽项已随 0.10.0 内核修复而收紧。

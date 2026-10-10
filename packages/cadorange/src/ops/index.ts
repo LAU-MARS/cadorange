@@ -8,17 +8,17 @@ import { todo } from "../util";
 
 export type BooleanOp = "fuse" | "cut" | "common";
 
-export function fuse(a: Solid, b: Shape): Solid {
-  return a.fuse(b);
+export function fuse(a: Solid, b: Shape, opts?: { clean?: boolean }): Solid {
+  return a.fuse(b, opts);
 }
 
-export function cut(a: Solid, b: Shape): Solid {
-  return a.cut(b);
+export function cut(a: Solid, b: Shape, opts?: { clean?: boolean }): Solid {
+  return a.cut(b, opts);
 }
 
 /** build123d `intersect` — OCCT `common`. */
-export function intersect(a: Solid, b: Shape): Solid {
-  return a.common(b);
+export function intersect(a: Solid, b: Shape, opts?: { clean?: boolean }): Solid {
+  return a.common(b, opts);
 }
 
 /** Keep the OCCT name for code translated from CadQuery. */

@@ -1,5 +1,5 @@
 import { type MeshData, meshToAsciiStl, type OccSession, type OccShape } from "occt.ts";
-import { type Vec3, v } from "../geom";
+import type { Vec3 } from "../geom";
 import type {
   CurveKind,
   EdgeMeta,
@@ -157,15 +157,20 @@ class OcctKernel implements Kernel {
     return this.#adopt(at ? this.#occ.translate(s, at) : s);
   }
 
-  boolean(op: "fuse" | "cut" | "common", a: ShapeHandle, b: ShapeHandle): ShapeHandle {
+  boolean(
+    op: "fuse" | "cut" | "common",
+    a: ShapeHandle,
+    b: ShapeHandle,
+    opts?: { clean?: boolean },
+  ): ShapeHandle {
     const ra = this.#raw(a);
     const rb = this.#raw(b);
     const result =
       op === "fuse"
-        ? this.#occ.fuse(ra, rb)
+        ? this.#occ.fuse(ra, rb, opts)
         : op === "cut"
-          ? this.#occ.cut(ra, rb)
-          : this.#occ.common(ra, rb);
+          ? this.#occ.cut(ra, rb, opts)
+          : this.#occ.common(ra, rb, opts);
     return this.#adopt(result);
   }
 
@@ -201,57 +206,37 @@ class OcctKernel implements Kernel {
     const edges: EdgeMeta[] = d.edges.map((e) => {
       const curve = (CURVE_KINDS.has(e.curve) ? e.curve : "other") as CurveKind;
       if (e.curve === "line") {
-        const center: [number, number, number] = [
-          (e.start[0] + e.end[0]) / 2,
-          (e.start[1] + e.end[1]) / 2,
-          (e.start[2] + e.end[2]) / 2,
-        ];
-        return { index: e.index, curve, length: e.length, center, direction: e.direction };
-      }
-      if (e.curve === "circle") {
         return {
           index: e.index,
           curve,
           length: e.length,
           center: e.center,
+          direction: e.direction,
+        };
+      }
+      if (e.curve === "circle") {
+        // axisPoint (the underlying circle's center), NOT the integral
+        // centroid — arc centroids would drift off-center and break
+        // selection semantics (occt.ts ≥0.10.0 reports both).
+        return {
+          index: e.index,
+          curve,
+          length: e.length,
+          center: e.axisPoint,
           axis: e.axis,
           radius: e.radius,
         };
       }
       if (e.curve === "ellipse") {
-        return { index: e.index, curve, length: e.length, center: e.center, axis: e.axis };
+        return { index: e.index, curve, length: e.length, center: e.axisPoint, axis: e.axis };
       }
-      // bspline / other: the kernel exposes no analytic center; the shape
-      // bbox center is a usable stand-in for position-based selection.
-      const fallback: [number, number, number] = [
-        (bbox.min[0] + bbox.max[0]) / 2,
-        (bbox.min[1] + bbox.max[1]) / 2,
-        (bbox.min[2] + bbox.max[2]) / 2,
-      ];
-      return { index: e.index, curve, length: e.length, center: fallback };
+      return { index: e.index, curve, length: e.length, center: e.center };
     });
 
     const faces: FaceMeta[] = d.faces.map((f) => {
       const surface = (SURFACE_KINDS.has(f.surface) ? f.surface : "other") as SurfaceKind;
       if (f.surface === "plane") {
-        // The kernel reports the plane's parametric origin (often a corner),
-        // not the face center — approximate the center with the mean of the
-        // edge midpoints lying in the face's plane. Exact for the face's
-        // normal-axis coordinate (every in-plane point shares it), which is
-        // what selection semantics key on. Exact centers: occt.ts R10.
-        const refPoint = f.origin;
-        const onPlane = edges.filter(
-          (e) => Math.abs(v.dot(e.center, f.normal) - v.dot(refPoint, f.normal)) <= 1e-4,
-        );
-        const center: Vec3 =
-          onPlane.length > 0
-            ? [
-                onPlane.reduce((acc, e) => acc + e.center[0], 0) / onPlane.length,
-                onPlane.reduce((acc, e) => acc + e.center[1], 0) / onPlane.length,
-                onPlane.reduce((acc, e) => acc + e.center[2], 0) / onPlane.length,
-              ]
-            : refPoint;
-        return { index: f.index, surface, area: f.area, center, normal: f.normal };
+        return { index: f.index, surface, area: f.area, center: f.center, normal: f.normal };
       }
       if (f.surface === "cylinder") {
         return {
@@ -267,24 +252,25 @@ class OcctKernel implements Kernel {
         return { index: f.index, surface, area: f.area, center: f.axisPoint, axis: f.axis };
       }
       if (f.surface === "sphere") {
-        return { index: f.index, surface, area: f.area, center: f.center, radius: f.radius };
+        return {
+          index: f.index,
+          surface,
+          area: f.area,
+          center: f.axisPoint,
+          radius: f.radius,
+        };
       }
       if (f.surface === "torus") {
         return {
           index: f.index,
           surface,
           area: f.area,
-          center: f.center,
+          center: f.axisPoint,
           axis: f.axis,
           radius: f.majorRadius,
         };
       }
-      const genericCenter: Vec3 = [
-        (bbox.min[0] + bbox.max[0]) / 2,
-        (bbox.min[1] + bbox.max[1]) / 2,
-        (bbox.min[2] + bbox.max[2]) / 2,
-      ];
-      return { index: f.index, surface, area: f.area, center: genericCenter };
+      return { index: f.index, surface, area: f.area, center: f.center };
     });
 
     const meta: ShapeMeta = {

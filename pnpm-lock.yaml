@@ -36,8 +36,8 @@ importers:
   packages/cadorange:
     dependencies:
       occt.ts:
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.10.0
+        version: 0.10.0
     devDependencies:
       '@types/node':
         specifier: ^26.6.4
@@ -722,8 +722,8 @@ packages:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
 
-  occt.ts@0.7.0:
-    resolution: {integrity: sha512-zF+l7mAKgGM5FqaBSJRr0h/DQWyX4QA9LTUjPepgEW4JZdUXKga/mpsKflNr9YgE/gDc4wV/PSS53B3htcn6kg==}
+  occt.ts@0.10.0:
+    resolution: {integrity: sha512-cwT0jdyuiYOlez7ZnghSlwIRPFWXeyq8iLakzOa5OBFiSJ4v9f/izUHtCdC2lqBkYxJCRuI1uJYttohj3FmDzA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1514,7 +1514,7 @@ snapshots:
 
   obug@3.0.0: {}
 
-  occt.ts@0.7.0: {}
+  occt.ts@0.10.0: {}
 
   package-manager-detector@1.9.0: {}
 

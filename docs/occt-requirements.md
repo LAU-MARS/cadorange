@@ -5,11 +5,17 @@ cadorange 的 kernel 层完全建立在 occt.ts 的高层 API（`OccSession`/`Oc
 本文按 cadorange 里程碑排优先级；occt.ts 排期自主，但 P0 会阻塞对应里程碑。
 cadorange 在需求落地前会采用表中标注的临时方案。
 
-状态标记：`[ ]` 待做 · `[~]` 已确认接受 · 本文档是活文档，随对标推进增删。
+状态标记：`[ ]` 待做 · `[~]` 已确认接受 · `✅ 已解决(occt.ts 0.10.0)` ·
+本文档是活文档，随对标推进增删。
+
+> **2026-10-10 销账**：occt.ts 0.10.0 一次性解决了 R1/R2/R3/R4/R5/R6/R10/R11/R12/R13
+> 共 10 项（cadorange 已升级适配并通过最严容差 parity 10/10）。未解决：R7（跨操作
+> 子形状身份）、R8（拓扑邻接）、R9（凹凸性）。另有一批 0.10.0 新能力待 cadorange
+> 采纳（见文末）。
 
 ## P0 — M0 期间必须处理
 
-### R1 OCCT 控制台输出污染 stdout
+### R1 OCCT 控制台输出污染 stdout ✅ 已解决(0.10.0：默认静音，`verbose` 显式开启)
 
 - **证据**：Node 中 `writeStep()` 向 **stdout** 打印
   `Statistics on Transfer ... Step File Name : /mem/occt_out.step (776 ents) Write Done`
@@ -23,7 +29,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 
 ## P1 — M1（草图与特征）前需要
 
-### R2 子形状提取
+### R2 子形状提取 ✅ 已解决(0.10.0：`subShapes(shape, type)` 全类型句柄)
 
 - **理由**：build123d 中 `solid.faces()` 返回**一等 Face 对象**（可单独 tessellate、
   导出、参与布尔、在其上建 Plane 画草图）。M1 的 `.faces(">Z").workplane()` 链路
@@ -37,14 +43,14 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **cadorange 临时方案**：M0 不需要——selectors/fillet 只用 `describe()` 元数据 +
   1-based 索引（已验证可行）。
 
-### R3 不等距 chamfer
+### R3 不等距 chamfer ✅ 已解决(0.10.0：`ChamferOptions.length2`)
 
 - **理由**：build123d `chamfer(obj, length, length2)` 支持双边不等距；occt.ts 只有
   等距 `chamfer(distance)`。
 - **建议**：`EdgeBlendOptions` 增加 `length2?: number`（省略 = 等距，向后兼容）。
 - **临时方案**：M0 只暴露等距。
 
-### R4 mirror 与通用变换
+### R4 mirror 与通用变换 ✅ 已解决(0.10.0：`mirror(shape, { plane | axis })`)
 
 - **理由**：build123d `mirror()` 是高频原语（对称件）。目前只有 translate/rotate/scale
   三个立即执行操作，无法表达镜像（负 scale 是点对称，不是镜像）。
@@ -57,7 +63,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
   `readStepDocument` 的 `transform` 同构）。
 - **临时方案**：M0 对称件用"重建"绕过；不做镜像 API。
 
-### R5 describe() 增加顶点
+### R5 describe() 增加顶点 ✅ 已解决(0.10.0：`GeometryDescription.vertices`)
 
 - **理由**：build123d `.vertices()` 选择器与 M1 草图端点捕捉需要顶点坐标；
   目前 `count("Vertex")` 有数字但 `describe()` 无顶点条目。
@@ -65,7 +71,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
   `vertices: Array<{ index: number; position: Vec3 }>`。
 - **临时方案**：M0 不暴露 `.vertices()`。
 
-### R6 compound 构造
+### R6 compound 构造 ✅ 已解决(0.10.0：`compound(shapes)`)
 
 - **理由**：阵列/多体（pattern、不相交 union）需要显式组合体；OCCT 的 fuse 对
   不相交体行为不保证。build123d/CadQuery 都有 Compound。
@@ -73,7 +79,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
   对 compound 全树遍历即可）。
 - **临时方案**：M0 单体模型，不涉及。
 
-### R10 describe() 携带面/边质心（2026-10-10 实测发现，P0）
+### R10 describe() 携带面/边质心（2026-10-10 实测发现，P0）✅ 已解决(0.10.0：所有 FaceInfo/EdgeInfo 同时有积分质心 `center` 与 `axisPoint`；cadorange 语义取用见 kernel 适配层注释)
 
 - **证据**：`PlaneFaceInfo.origin` 是**曲面参数原点（常在角落）**，不是面中心。
   居中盒（x∈[−40,40]）顶面的 origin 是 (−40,−30,10)——用它当中心，
@@ -84,7 +90,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
   对法向轴坐标是**精确**的（面内任意点法向坐标相同），面内位置是近似。
   已被 parity 与 workplane 测试覆盖，但曲面/含孔面精确质心需要此 API。
 
-### R11 describe() 子形状枚举与 TopExp 对齐（P1）
+### R11 describe() 子形状枚举与 TopExp 对齐（P1）✅ 已解决(0.10.0；parity 最严容差实测面/边计数与 build123d 完全一致)
 
 - **证据**：同一"板开孔"模型，build123d `len(faces())` = 7，occt.ts
   `describe().faces` = 8；边数一致（15）。多出的面疑似圆柱面接缝拆分。
@@ -93,7 +99,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **建议**：审计 interrogate 的子形状遍历（去重/接缝处理），与
   `countSubShapes`/TopExp 对齐，并记录计数规则。
 
-### R12 布尔结果做同域面合并（fuse unify same-domain，P0.5）
+### R12 布尔结果做同域面合并（fuse unify same-domain，P0.5）✅ 已解决(0.10.0：布尔默认过 UnifySameDomain，`{ clean: false }` 关闭，另有独立 `unify()`；cadorange 已透传 clean 选项)
 
 - **证据**：两个重叠盒 fuse，体积/面积与 build123d 一致，但 build123d 输出
   干净单箱（6 面 12 边），occt.ts 结果保留 12 面 28 边（原始面 + 相交边未合并）。
@@ -104,7 +110,7 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **cadorange 临时方案**：parity 对 fuse 用例放宽面/边计数容差（已在
   cases.json 标注）。
 
-### R13 bounds() 用紧致包围盒（optimal bbox，P1）
+### R13 bounds() 用紧致包围盒（optimal bbox，P1）✅ 已解决(0.10.0；parity torus 用例 bbox 容差 1e-4 实测通过)
 
 - **证据**：Torus(20,5) 的体积/面积/面数与 build123d **逐位一致**，但
   bounds() 给 xy ∈ ±27.06（真实 ±25，+8.2% 外扩——样条控制点包络特征）。
@@ -137,22 +143,28 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **建议**：interrogate 层为 edge 增加二面角/凹凸分类（相邻两面的法向关系，
   依赖 R8 的邻接表；曲面情形可用局部采样近似）。
 
-## 已验证可用的能力（M0 清单核对，2026-10-10）
-
-occt.ts 0.7.0 + OCCT 7.9.3，Node 端实测：
+## 已验证可用的能力（2026-10-10，occt.ts 0.10.0 + OCCT 7.9.x，Node 端实测）
 
 | M0 需求 | occt.ts 能力 | 状态 |
 | --- | --- | --- |
 | Box/Cylinder/Sphere/Cone/Torus | `makeBox/makeCylinder/...` | ✅ |
-| 布尔 cut/fuse/intersect | `cut/fuse/common` | ✅ |
-| fillet/chamfer/变半径 | `fillet/chamfer/variableFillet`（按 describe 索引选边） | ✅ |
-| 选择器输入 | `describe()` 解析几何（法向/轴/半径/长度/面积/孔） | ✅ |
-| STEP/BRep/GLB 导出 | `writeStep/writeBrep/writeGltf` | ✅ |
+| 布尔 cut/fuse/intersect（默认 clean） | `cut/fuse/common` + `BooleanOptions.clean` + `unify()` | ✅ |
+| fillet/chamfer/变半径/不等距 | `fillet/chamfer/variableFillet` + `ChamferOptions.length2` | ✅ |
+| 选择器输入 | `describe()` 解析几何（质心/axisPoint/法向/轴/半径/长度/面积/孔/顶点） | ✅ |
+| STEP/BRep/GLB 导出 | `writeStep/writeBrep/writeGltf` | ✅（默认静音，见 R1） |
 | STL 导出 | `meshToAsciiStl`（exporters 层，TS） | ✅（ascii） |
 | 渲染输入 | `tessellate`（含边线段）、`hiddenLines`（HLR 工程图） | ✅ |
-| 几何体检 | `volume/area/bounds/centroid/isValid/count` | ✅（bounds 见 R13） |
+| 几何体检 | `volume/area/bounds/centroid/isValid/count` | ✅（optimal bounds，见 R13） |
 
-结论（2026-10-10 更新，经 parity 对拍实测）：**M0 能力可用，volume/area 与
-build123d 逐位一致**；P0 缺口三个——R1（stdout 静音）、R10（面质心）、
-R12（fuse 同域合并）——均已有 cadorange 侧临时方案与标注；其余缺口集中在
-M1（子形状、mirror、顶点、compound、不等距 chamfer、optimal bbox）。
+结论（2026-10-10 第二次更新）：**0.10.0 后 M0+M1 的内核能力全部就绪且经 parity
+最严容差验证（10/10，面/边计数与 build123d 完全一致）**。未解决仅 R7/R8/R9
+（深度对标基建，M2+）。
+
+## 0.10.0 新能力待 cadorange 采纳（按里程碑吸收，勿一次性全上）
+
+- **M0.5 即可接**：`vertices()`（describe 已带顶点，补 Vertex 视图 + 选择器）、
+  `mirror()`、不等距 `chamfer(distance, length2)`、`compound()`（多体）
+- **M1 直接可用**：`subShapes()`（一等子形状句柄——草图在面上构图的关键基建）、
+  `makeHelix`、B 样条曲面、`heal()`（ sloppy 导入修复）、`pipe`
+- **M1 阵列**：`circularPattern/rectangularPattern`（bolt circle / 筋板网格）
+- 采纳时同步更新 docs/api-map.md 的状态与差异表。

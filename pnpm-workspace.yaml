@@ -1,2 +1,4 @@
 packages:
   - "packages/*"
+minimumReleaseAgeExclude:
+  - occt.ts@0.10.0

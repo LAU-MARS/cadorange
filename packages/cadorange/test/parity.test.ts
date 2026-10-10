@@ -136,10 +136,10 @@ describe("parity vs build123d", () => {
         expect(Math.abs((d.bbox.max[i] ?? 0) - (m.bboxMax[i] ?? 0))).toBeLessThan(bboxTol);
       }
 
-      // sub-shape counting semantics can differ by seam handling between
-      // kernels (documented in docs/occt-requirements.md R11/R12)
-      expect(Math.abs(d.faces - m.faces)).toBeLessThanOrEqual(c.facesTolerance ?? 1);
-      expect(Math.abs(d.edges - m.edges)).toBeLessThanOrEqual(c.edgesTolerance ?? 1);
+      // sub-shape counting must agree exactly now that booleans unify and
+      // describe() enumeration is TopExp-aligned (occt.ts >= 0.10.0)
+      expect(Math.abs(d.faces - m.faces)).toBeLessThanOrEqual(c.facesTolerance ?? 0);
+      expect(Math.abs(d.edges - m.edges)).toBeLessThanOrEqual(c.edgesTolerance ?? 0);
       expect(d.valid).toBe(m.valid);
     });
   }

@@ -24,9 +24,7 @@
     {
       "name": "torus",
       "ops": [{ "op": "torus", "id": "a", "radius1": 20, "radius2": 5 }],
-      "result": "a",
-      "bboxTolerance": 3,
-      "$note": "occt.ts bounds() is pole-loose on curved primitives (R13); geometry matches exactly"
+      "result": "a"
     },
     {
       "name": "plate_with_hole",
@@ -62,10 +60,7 @@
         { "op": "box", "id": "b", "dx": 10, "dy": 10, "dz": 10, "origin": [5, 0, 0] },
         { "op": "fuse", "id": "c", "target": "a", "tool": "b" }
       ],
-      "result": "c",
-      "facesTolerance": 8,
-      "edgesTolerance": 20,
-      "$note": "occt.ts fuse keeps unmerged same-domain faces (R12); volume/area already agree"
+      "result": "c"
     },
     {
       "name": "common_boxes",

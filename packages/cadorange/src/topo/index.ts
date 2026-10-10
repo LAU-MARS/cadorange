@@ -95,22 +95,23 @@ export class Shape {
     );
   }
 
-  cut(b: Shape): Solid {
-    return record("cut", { target: this.handle.id, tool: b.handle.id }, () =>
-      solidFromKernel(getKernel().boolean("cut", this.handle, b.handle)),
+  /** See `Kernel.boolean` — cleaned by default (UnifySameDomain). */
+  cut(b: Shape, opts?: { clean?: boolean }): Solid {
+    return record("cut", { target: this.handle.id, tool: b.handle.id, ...opts }, () =>
+      solidFromKernel(getKernel().boolean("cut", this.handle, b.handle, opts)),
     );
   }
 
-  fuse(b: Shape): Solid {
-    return record("fuse", { target: this.handle.id, tool: b.handle.id }, () =>
-      solidFromKernel(getKernel().boolean("fuse", this.handle, b.handle)),
+  fuse(b: Shape, opts?: { clean?: boolean }): Solid {
+    return record("fuse", { target: this.handle.id, tool: b.handle.id, ...opts }, () =>
+      solidFromKernel(getKernel().boolean("fuse", this.handle, b.handle, opts)),
     );
   }
 
   /** build123d's `intersect` (OCCT `common`). */
-  common(b: Shape): Solid {
-    return record("common", { target: this.handle.id, tool: b.handle.id }, () =>
-      solidFromKernel(getKernel().boolean("common", this.handle, b.handle)),
+  common(b: Shape, opts?: { clean?: boolean }): Solid {
+    return record("common", { target: this.handle.id, tool: b.handle.id, ...opts }, () =>
+      solidFromKernel(getKernel().boolean("common", this.handle, b.handle, opts)),
     );
   }
 

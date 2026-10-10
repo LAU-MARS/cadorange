@@ -115,18 +115,19 @@ CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z
 3. **Location 立即烘焙**：occt.ts 变换立即执行返回新 shape；无 `Loc * Loc` 惰性链。
 4. **子形状身份**：Edge/Face 是视图对象（父 shape + describe 索引），跨 op 不追踪
    （build123d label 系统待 occt.ts R7 tag 支撑）。M0 规则：blend 的边必须属于被操作的 shape。
-5. **chamfer 暂等距**（待 R3）；**无 `.vertices()`**（待 R5）；**无 mirror**（待 R4）。
+5. **chamfer 暂等距 / 无 `.vertices()` / 无 mirror**：内核已就绪（0.10.0 的
+   `length2`/`vertices`/`mirror`），cadorange 公开 API 待采纳（见
+   occt-requirements.md 文末"待采纳"清单）。
 6. **describe() 是统一体检出口**：`volume/area/bbox/center/isValid` 走 `describe()` 或
    显式方法，两处数值必须同源。
-7. **fuse 结果不做同域合并**（待 R12）：融合件的面/边计数高于 build123d，
-   体积/面积一致；融合件上的面选择暂受影响。
+7. ~~fuse 结果不做同域合并~~：0.10.0 起布尔默认 clean（UnifySameDomain），
+   与 build123d 行为一致；`{ clean: false }` 保留原始碎片拓扑。
 
-## 实现进度（2026-10-10）
+## 实现进度（2026-10-10，occt.ts 0.10.0）
 
-M0 核心垂直切片已落地并全绿（32/32 测试，含 10 个 parity 用例）：
-kernel 适配（occt.ts 0.7.0）、geom（Axis/isParallel）、topo
-（Shape/Solid/Face/Edge 视图/ShapeList）、五原语、布尔、fillet/chamfer、
-选择器谓词内核 + CadQuery 字符串解析、workplane 门面（README 示例可跑）、
-STEP/STL/GLB 导出 + STEP 导入、record() 全量记账。对标度量基线：
-**volume/area 与 build123d 逐位一致（含 blend 用例）**；标注待收紧项见
-parity/README.md 与 docs/occt-requirements.md R12/R13。
+M0 核心垂直切片已落地并全绿：kernel 适配、geom（Axis/isParallel）、topo
+（Shape/Solid/Face/Edge 视图/ShapeList）、五原语、布尔（默认 clean + 透传）、
+fillet/chamfer、选择器谓词内核 + CadQuery 字符串解析、workplane 门面（README
+示例可跑）、STEP/STL/GLB 导出 + STEP 导入、record() 全量记账。
+对标度量基线（parity 10/10，最严容差）：**volume/area 与 build123d 逐位一致
+（含 blend 用例），面/边计数完全一致**。已发布 `cadorange@0.1.0`。

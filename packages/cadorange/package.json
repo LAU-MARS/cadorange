@@ -1,6 +1,6 @@
 {
   "name": "cadorange",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agent-native CAD runtime in TypeScript, powered by occt.ts (OCCT/WASM). Core modeling API: shapes, selectors, booleans, features, import/export.",
   "type": "module",
   "license": "Apache-2.0",
@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "occt.ts": "^0.7.0"
+    "occt.ts": "^0.10.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.4"
