@@ -1,6 +1,6 @@
 {
   "name": "@cadorange/mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MCP server and the cado CLI for cadorange.",
   "type": "module",
   "license": "Apache-2.0",

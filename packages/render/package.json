@@ -1,6 +1,6 @@
 {
   "name": "@cadorange/render",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Headless multi-view rendering (PNG/SVG) for cadorange.",
   "type": "module",
   "license": "Apache-2.0",
