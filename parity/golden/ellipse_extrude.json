@@ -1,0 +1,25 @@
+{
+  "name": "ellipse_extrude",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 94.2477796076938,
+    "area": 145.30210744220585,
+    "bboxMin": [
+      -5.0,
+      -3.0,
+      0.0
+    ],
+    "bboxMax": [
+      5.0,
+      3.0,
+      2.0
+    ],
+    "faces": 3,
+    "edges": 3,
+    "vertices": 2,
+    "valid": true
+  }
+}

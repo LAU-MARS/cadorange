@@ -6,10 +6,32 @@
  * fluent facade. Mapping details: docs/api-map.md.
  */
 
-export type { Axis3, AxisName, BBox, Loc, Location, Mesh, Plane, Vec3 } from "./geom";
-export { Axis, axisByName, planeFrom, v } from "./geom";
+export type { Axis3, AxisName, BBox, Color, Loc, Mat3, Mesh, Placement, Plane, Vec3 } from "./geom";
+export {
+  Axis,
+  axisByName,
+  color,
+  Location,
+  m3apply,
+  mat3ToAxisAngle,
+  mul3,
+  Pos,
+  planeFrom,
+  Rot,
+  transpose3,
+  v,
+} from "./geom";
 export type { ExportFormat } from "./io";
-export { exportGlb, exportShape, exportStep, exportStl, importStep } from "./io";
+export {
+  exportBrep,
+  exportGlb,
+  exportObj,
+  exportShape,
+  exportStep,
+  exportStl,
+  importBrep,
+  importStep,
+} from "./io";
 export type {
   CurveKind,
   EdgeMeta,
@@ -28,34 +50,62 @@ export {
   common,
   compound,
   cut,
+  distance,
+  draft,
   extrude,
   fillet,
   fuse,
   intersect,
+  loft,
   mirror,
+  offset,
   revolve,
+  rotate,
+  scale,
+  section,
+  shell,
+  split,
+  sweep,
   translate,
 } from "./ops";
-export { Box, Cone, Cylinder, Sphere, Torus } from "./primitives";
+export { Box, Cone, Cylinder, Sphere, Torus, Wedge } from "./primitives";
 export type { OpEvent, OpListener, OpRecord, OpStatus } from "./record";
 export { onOp, record } from "./record";
 export type { Selector, SubShape } from "./selectors";
 export { parseSelector } from "./selectors";
 export type { SketchOpts } from "./sketch";
 export {
+  BSpline,
   CenterArc,
   Circle,
+  ConicArc,
   combineWires,
+  Ellipse,
+  FilletPolyline,
   faceOf,
   gridLocations,
+  Helix,
+  IntersectingLine,
+  JernArc,
   Line,
+  PolarLine,
   Polygon,
   Polyline,
   RadiusArc,
   Rectangle,
+  RectangleRounded,
   RegularPolygon,
+  SagittaArc,
+  SlotArc,
+  SlotCenterPoint,
   SlotCenterToCenter,
+  SlotOverall,
+  Spline,
+  Superellipse,
+  TangentArc,
   ThreePointArc,
+  Trapezoid,
+  Triangle,
 } from "./sketch";
 export type { Describe } from "./topo";
 export { Edge, Face, Shape, ShapeList, Solid, Vertex, Wire } from "./topo";

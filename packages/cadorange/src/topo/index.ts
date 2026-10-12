@@ -11,7 +11,7 @@
  * `topology/shape_core.py` (Apache-2.0).
  */
 
-import { Axis, type Plane as PlaneT, type Vec3, v } from "../geom";
+import { Axis, type Location, mat3ToAxisAngle, type Plane as PlaneT, type Vec3, v } from "../geom";
 import { getKernel } from "../kernel/occt";
 import type { EdgeMeta, FaceMeta, ShapeHandle, ShapeMeta, VertexMeta } from "../kernel/types";
 import { record } from "../record";
@@ -89,6 +89,165 @@ export class Shape {
 
   vertices(): ShapeList<Vertex> {
     return new ShapeList(this.meta().vertices.map((v) => new Vertex(this, v)));
+  }
+
+  /* Singular selectors (build123d `faces().first()` assertion sugar). */
+  face(): Face {
+    return this.faces().single("face");
+  }
+
+  edge(): Edge {
+    return this.edges().single("edge");
+  }
+
+  vertex(): Vertex {
+    return this.vertices().single("vertex");
+  }
+
+  /** Sub-solids of a (possibly compound) shape. */
+  solids(): Solid[] {
+    return getKernel()
+      .subShapes(this.handle, "Solid")
+      .map((h) => new Solid(h));
+  }
+
+  /** Sub-wires (sketch profiles, face boundaries). */
+  wires(): Wire[] {
+    return getKernel()
+      .subShapes(this.handle, "Wire")
+      .map((h) => new Wire(h));
+  }
+
+  boundingBox(): { min: Vec3; max: Vec3 } {
+    return this.meta().bbox;
+  }
+
+  /** Minimum distance to another shape (build123d `topo_distance_to`). */
+  distanceTo(other: Shape): number {
+    return getKernel().distance(this.handle, other.handle);
+  }
+
+  /** Rotate `angleDegrees` about the axis through the origin. */
+  rotate(axis: Axis, angleDegrees: number): Solid {
+    return record("rotate", { angleDegrees }, () =>
+      solidFromKernel(getKernel().rotate(this.handle, axis.direction, angleDegrees)),
+    );
+  }
+
+  scale(factor: number): Solid {
+    return record("scale", { factor }, () =>
+      solidFromKernel(getKernel().scale(this.handle, factor)),
+    );
+  }
+
+  /**
+   * Bakes a composed `Location` onto this shape (build123d `Loc * shape`):
+   * rotate to the location frame, then translate — immediately evaluated.
+   */
+  located(loc: Location): Solid {
+    return record("located", {}, () => {
+      const { axis, angleDegrees } = mat3ToAxisAngle(loc.rotation());
+      let out = this.handle;
+      if (Math.abs(angleDegrees) > 1e-9) {
+        out = getKernel().rotate(out, axis, angleDegrees);
+      }
+      const o = loc.origin;
+      if (Math.abs(o[0]) + Math.abs(o[1]) + Math.abs(o[2]) > 1e-12) {
+        out = getKernel().translate(out, [o[0] ?? 0, o[1] ?? 0, o[2] ?? 0]);
+      }
+      return solidFromKernel(out);
+    });
+  }
+
+  /**
+   * Drills a hole (build123d `Hole`, algebra form): `face` defaults to the
+   * topmost planar face (">Z"), `depth` defaults to through.
+   */
+  hole(diameter: number, opts?: { face?: Face; at?: Vec3; depth?: number }): Solid {
+    return this.cut(this.#holeTool(diameter, 0, 0, opts));
+  }
+
+  /** Counterbore (build123d `CounterBoreHole`). */
+  counterBoreHole(
+    diameter: number,
+    cbDiameter: number,
+    cbDepth: number,
+    opts?: { face?: Face; at?: Vec3 },
+  ): Solid {
+    return this.cut(this.#holeTool(diameter, cbDiameter, cbDepth, opts));
+  }
+
+  /** Countersink (build123d `CounterSinkHole`): cone mouth of `csDiameter`. */
+  counterSinkHole(
+    diameter: number,
+    csDiameter: number,
+    csAngle = 90,
+    opts?: { face?: Face; at?: Vec3 },
+  ): Solid {
+    const f = opts?.face ?? this.#topFace();
+    const anchor = opts?.at ?? f.center;
+    const n = f.outerNormal();
+    const depth = (csDiameter - diameter) / 2 / Math.tan(((csAngle / 2) * Math.PI) / 180);
+    const bb = this.meta().bbox;
+    const through = v.length(v.sub(bb.max, bb.min));
+    const main = getKernel().makeCylinder(
+      diameter / 2,
+      through + 2,
+      [anchor[0] ?? 0, anchor[1] ?? 0, anchor[2] ?? 0],
+      v.scale(n, -1) as Vec3,
+    );
+    const sink = getKernel().makeCone(diameter / 2, csDiameter / 2, depth, [
+      anchor[0] ?? 0,
+      anchor[1] ?? 0,
+      anchor[2] ?? 0,
+    ]);
+    return this.cut(
+      solidFromKernel(
+        getKernel().boolean("fuse", solidFromKernel(main).handle, solidFromKernel(sink).handle),
+      ),
+    );
+  }
+
+  /** The cutting tool for hole/counterBoreHole. */
+  #holeTool(
+    diameter: number,
+    cbDiameter: number,
+    cbDepth: number,
+    opts: { face?: Face; at?: Vec3; depth?: number } | undefined,
+  ): Solid {
+    const f = opts?.face ?? this.#topFace();
+    const anchor = opts?.at ?? f.center;
+    const n = f.outerNormal();
+    const bb = this.meta().bbox;
+    const through = opts?.depth ?? v.length(v.sub(bb.max, bb.min)) + 2;
+    let tool = solidFromKernel(
+      getKernel().makeCylinder(
+        diameter / 2,
+        through,
+        [anchor[0] ?? 0, anchor[1] ?? 0, anchor[2] ?? 0],
+        v.scale(n, -1) as Vec3,
+      ),
+    );
+    if (cbDiameter > diameter) {
+      const cb = solidFromKernel(
+        getKernel().makeCylinder(
+          cbDiameter / 2,
+          cbDepth,
+          [anchor[0] ?? 0, anchor[1] ?? 0, anchor[2] ?? 0],
+          v.scale(n, -1) as Vec3,
+        ),
+      );
+      tool = solidFromKernel(getKernel().boolean("fuse", tool.handle, cb.handle));
+    }
+    return tool;
+  }
+
+  #topFace(): Face {
+    const top = this.faces().filterBy(Axis.Z).sortBy(Axis.Z).last();
+    if (!top) {
+      throw new Error("hole: no planar top face found — pass one explicitly via { face }.");
+    }
+    return top;
   }
 
   /** See `Kernel.boolean` — cleaned by default (UnifySameDomain). */

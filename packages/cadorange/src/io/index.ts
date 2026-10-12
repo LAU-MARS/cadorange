@@ -22,6 +22,23 @@ export function exportGlb(s: Shape): Uint8Array {
   return getKernel().exportGlb(s.handle);
 }
 
+export function exportBrep(s: Shape): Uint8Array {
+  return getKernel().exportBrep(s.handle);
+}
+
+export function exportObj(s: Shape): string {
+  return getKernel().exportObj(s.handle);
+}
+
+export function importBrep(data: Uint8Array | string): Promise<Solid> {
+  const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
+  return Promise.resolve(
+    record("importBrep", { bytes: bytes.length }, () =>
+      solidFromKernel(getKernel().importBrep(bytes)),
+    ),
+  );
+}
+
 export function importStep(data: Uint8Array | string): Promise<Solid> {
   const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
   return Promise.resolve(

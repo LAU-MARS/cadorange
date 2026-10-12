@@ -44,3 +44,29 @@ export function Torus(opts: { radius1: number; radius2: number; loc?: Loc }): So
     solidFromKernel(getKernel().makeTorus(opts.radius1, opts.radius2, at(opts.loc))),
   );
 }
+
+/**
+ * Right wedge over a `dx x dy` base, `dz` tall, sloped from the +X edge down
+ * to zero at x=0 (build123d `Wedge`, simplified corner variant): composed as
+ * a box minus a sloped triangular prism.
+ */
+export function Wedge(opts: { dx: number; dy: number; dz: number; loc?: Loc }): Solid {
+  return record("wedge", { ...opts }, () => {
+    const k = getKernel();
+    const o = at(opts.loc) ?? [0, 0, 0];
+    const box = k.makeBox(opts.dx, opts.dy, opts.dz, o);
+    // triangular prism in the XZ plane extruded along Y
+    const tri = k.extrude(
+      k.makePolygon(
+        [
+          [o[0] ?? 0, (o[1] ?? 0) - 1, (o[2] ?? 0) + opts.dz],
+          [(o[0] ?? 0) + opts.dx, (o[1] ?? 0) - 1, (o[2] ?? 0) + opts.dz],
+          [(o[0] ?? 0) + opts.dx, (o[1] ?? 0) - 1, o[2] ?? 0],
+        ],
+        true,
+      ),
+      [0, opts.dy + 2, 0],
+    );
+    return solidFromKernel(k.boolean("cut", box, tri));
+  });
+}

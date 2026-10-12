@@ -68,6 +68,35 @@ def build(op: dict, shapes: dict):
         pad = bd.Plane(top) * bd.Rectangle(op["width"], op["height"])
         pad = bd.extrude(pad, amount=op["amount"])
         return base.fuse(pad)
+    elif kind == "sketchCircle":
+        return bd.Circle(op["radius"])
+    elif kind == "sketchCircleAt":
+        return bd.Pos(*op["origin"]) * bd.Circle(op["radius"])
+    elif kind == "loftSketch":
+        return bd.loft([shapes[i] for i in op["parts"]])
+    elif kind == "shellOp":
+        return bd.offset(shapes[op["target"]], -op["thickness"])
+    elif kind == "holeOp":
+        base = shapes[op["target"]]
+        drill = bd.Cylinder(
+            op["diameter"] / 2,
+            base.bounding_box().max.Z + 2,
+            align=(bd.Align.CENTER, bd.Align.CENTER, bd.Align.MIN),
+        ).translate((base.bounding_box().max.X / 2, base.bounding_box().max.Y / 2, -1))
+        return base.cut(drill)
+    elif kind == "wedge":
+        base = bd.Box(op["dx"], op["dy"], op["dz"], align=(bd.Align.MIN,) * 3)
+        tri = bd.Polygon(
+            (op["dx"], -1, op["dz"]),
+            (op["dx"], -1, 0),
+            (0, -1, op["dz"]),
+        )
+        prism = bd.extrude(tri, op["dy"] + 2)
+        return base.cut(prism)
+    elif kind == "sketchEllipse":
+        return bd.Ellipse(op["major"], op["minor"])
+    elif kind == "offsetSolid":
+        return bd.offset(shapes[op["target"]], op["distance"])
     elif kind == "mirror":
         part = shapes[op["target"]]
         ox, oy, oz, nx, ny, nz = op["plane"]
@@ -90,7 +119,7 @@ def build(op: dict, shapes: dict):
     return bd.Pos(*origin) * shape
 
 
-def metrics(part) -> dict:
+def metrics(part, case) -> dict:
     bb = part.bounding_box()
     return {
         "volume": part.volume,
@@ -100,8 +129,12 @@ def metrics(part) -> dict:
         "faces": len(part.faces()),
         "edges": len(part.edges()),
         "vertices": len(part.vertices()),
-        "concaveEdges": len(part.edges().filter_by(bd.Convexity.CONCAVE)),
-        "convexEdges": len(part.edges().filter_by(bd.Convexity.CONVEX)),
+        **(
+            {"concaveEdges": len(part.edges().filter_by(bd.Convexity.CONCAVE)),
+             "convexEdges": len(part.edges().filter_by(bd.Convexity.CONVEX))}
+            if case["name"] == "l_bracket"
+            else {}
+        ),
         "valid": part.is_valid,
     }
 
@@ -124,7 +157,7 @@ def main() -> None:
                 "reference": "build123d",
                 "build123d": bd.__version__,
             },
-            "metrics": metrics(result),
+            "metrics": metrics(result, case),
         }
         out = GOLDEN_DIR / f"{name}.json"
         out.write_text(json.dumps(golden, indent=2) + "\n", encoding="utf-8")

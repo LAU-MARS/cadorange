@@ -1,5 +1,19 @@
 # cadorange
 
+## 0.7.0
+
+### Minor Changes
+
+- Core-API alignment sweep — build123d coverage grows from ~55 to ~91 of 126 core exports.
+  
+  - **Operations**: `loft`, `sweep`, `split` (all fragments), `section`, `shell` (hollow with optional open faces), `draft`, `offset` (uniform 3D grow/shrink), `rotate`, `scale`, `distance`
+  - **Sketch/curve primitives (31 total)**: Triangle, Trapezoid, RectangleRounded, Ellipse, SlotArc/SlotCenterPoint/SlotOverall, PolarLine, IntersectingLine, SagittaArc, TangentArc, JernArc, FilletPolyline, Spline, BSpline, Superellipse (sampled), ConicArc (parabola/hyperbola, sampled), Helix
+  - **3D**: `Wedge`; hole family as shape methods — `hole(d, {face, at, depth})`, `counterBoreHole`, `counterSinkHole` (face defaults to topmost, drills along the calibrated outer normal)
+  - **Selection/inspection**: singular selectors `face()/edge()/vertex()`, `solids()`, `wires()`, `boundingBox()`, `distanceTo()`
+  - **Location algebra**: `Location` class with `mul`/`inverse`, `Pos(x,y,z)`, `Rot(x,y,z)`, and `shape.located(loc)` (baked immediately — no lazy chains over WASM); `Mat3` matrix math; `Color` value type
+  - **IO**: `importBrep`, `exportBrep`, `exportObj`
+  - Parity 22/22 (new cases: loft, uniform offset, hole, wedge, ellipse); remaining 35 core items triaged in docs/api-map.md (not-applicable / kernel-gated R14-R15 / solver-bound / next batch)
+
 ## 0.6.0
 
 ### Minor Changes

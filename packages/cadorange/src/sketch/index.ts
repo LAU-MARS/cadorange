@@ -205,6 +205,9 @@ export function CenterArc(
 export function SlotCenterToCenter(length: number, diameter: number, opts?: SketchOpts): Wire {
   const r = diameter / 2;
   const half = length / 2;
+  if (length <= 0) {
+    return Circle(diameter / 2, opts); // zero-length slot degenerates to a circle
+  }
   // two half-circles plus two closing lines, CCW from the right cap
   const right = CenterArc([half, 0], r, -90, 180, opts);
   const top = Line([half, r], [-half, r], opts);
@@ -260,4 +263,332 @@ export function gridLocations(
     }
   }
   return out;
+}
+
+/* --------------------- more curves & sketch objects --------------------- */
+
+/** Triangle by three vertices (build123d `Triangle`). */
+export function Triangle(
+  a: readonly [number, number],
+  b: readonly [number, number],
+  c: readonly [number, number],
+  opts?: SketchOpts,
+): Wire {
+  return Polygon([a, b, c], opts);
+}
+
+/**
+ * Isosceles trapezoid (build123d `Trapezoid`): `width` base, `height` tall,
+ * `interiorAngle` (degrees) tilts the sides — the top edge follows.
+ */
+export function Trapezoid(
+  width: number,
+  height: number,
+  interiorAngle = 90,
+  opts?: SketchOpts,
+): Wire {
+  const skew = height / Math.tan((interiorAngle * Math.PI) / 180);
+  const half = width / 2;
+  return Polygon(
+    [
+      [-half, 0],
+      [half, 0],
+      [half - skew, height],
+      [-half + skew, height],
+    ],
+    opts,
+  );
+}
+
+/** Rectangle with filleted corners (build123d `RectangleRounded`). */
+export function RectangleRounded(
+  width: number,
+  height: number,
+  radius: number,
+  opts?: SketchOpts,
+): Wire {
+  const h = width / 2 - radius;
+  const k = height / 2 - radius;
+  if (h <= 0 || k <= 0) {
+    throw new Error("RectangleRounded: radius must be smaller than half the side.");
+  }
+  const corner = (cx: number, cy: number, start: number): Wire =>
+    CenterArc([cx, cy], radius, start, 90, opts);
+  const seg = (p: readonly [number, number], q: readonly [number, number]): Wire =>
+    Line(p, q, opts);
+  return combineWires(
+    corner(h, -k, -90),
+    seg([h + radius, -k], [h + radius, k]),
+    corner(h, k, 0),
+    seg([h, k + radius], [-h, k + radius]),
+    corner(-h, k, 90),
+    seg([-h - radius, k], [-h - radius, -k]),
+    corner(-h, -k, 180),
+    seg([-h, -k - radius], [h, -k - radius]),
+  );
+}
+
+/** Full ellipse (build123d `Ellipse`): major along local X, minor along Y. */
+export function Ellipse(majorRadius: number, minorRadius: number, opts?: SketchOpts): Wire {
+  const f = frameOf(opts);
+  const origin = local(f, [0, 0], opts);
+  return record("sketchEllipse", { majorRadius, minorRadius }, () =>
+    wireFromKernel(
+      getKernel().makeEllipse(majorRadius, minorRadius, origin, f.normal),
+      planeOfFrame(f),
+    ),
+  );
+}
+
+/** Slot by center point and diameter, axis along local X (build123d `SlotCenterPoint`). */
+export function SlotCenterPoint(
+  center: readonly [number, number],
+  diameter: number,
+  opts?: SketchOpts,
+): Wire {
+  const _r = diameter / 2;
+  return SlotCenterToCenter(0, diameter, { ...opts, at: center });
+}
+
+/** Slot by overall length and diameter (build123d `SlotOverall`). */
+export function SlotOverall(length: number, diameter: number, opts?: SketchOpts): Wire {
+  const centers = Math.max(0, length - diameter);
+  return SlotCenterToCenter(centers, diameter, opts);
+}
+
+/**
+ * Curved slot (build123d `SlotArc`): `diameter` wide, centered on an arc of
+ * `radius` spanning `arcSize` degrees. Composed from outer/inner arcs and
+ * two end caps.
+ */
+export function SlotArc(
+  radius: number,
+  arcSize: number,
+  diameter: number,
+  opts?: SketchOpts,
+): Wire {
+  const r = diameter / 2;
+  const phi = ((arcSize / 2) * Math.PI) / 180;
+  const deg = (a: number): number => (a * 180) / Math.PI;
+  const outer = CenterArc([0, 0], radius + r, -deg(phi), arcSize, opts);
+  const inner = CenterArc([0, 0], radius - r, deg(phi), 360 - arcSize, opts);
+  // caps: half circles centered on the center-arc, joining outer and inner
+  // endpoints exactly (tangent points lie radially at +/- phi)
+  const capRight = CenterArc(
+    [radius * Math.cos(phi), radius * Math.sin(phi)],
+    r,
+    deg(phi),
+    180,
+    opts,
+  );
+  const capLeft = CenterArc(
+    [radius * Math.cos(-phi), radius * Math.sin(-phi)],
+    r,
+    180 - deg(phi),
+    180,
+    opts,
+  );
+  return combineWires(outer, capRight, inner, capLeft);
+}
+
+/** Line of `length` at `angleDegrees` CCW from +X (build123d `PolarLine`). */
+export function PolarLine(length: number, angleDegrees: number, opts?: SketchOpts): Wire {
+  const a = (angleDegrees * Math.PI) / 180;
+  return Line([0, 0], [length * Math.cos(a), length * Math.sin(a)], opts);
+}
+
+/**
+ * Line from `start` at `angleDegrees` to the reference direction
+ * (build123d `IntersectingLine` with an explicit reference angle).
+ */
+export function IntersectingLine(
+  start: readonly [number, number],
+  referenceAngleDegrees: number,
+  angleToReference: number,
+  length: number,
+  opts?: SketchOpts,
+): Wire {
+  const a = ((referenceAngleDegrees + angleToReference) * Math.PI) / 180;
+  return Line(start, [start[0] + length * Math.cos(a), start[1] + length * Math.sin(a)], opts);
+}
+
+/** Arc by sagitta: the bump height above the chord (build123d `SagittaArc`). */
+export function SagittaArc(
+  start: readonly [number, number],
+  end: readonly [number, number],
+  sagitta: number,
+  opts?: SketchOpts,
+): Wire {
+  const chord = Math.hypot(end[0] - start[0], end[1] - start[1]);
+  if (sagitta <= 0) {
+    throw new Error("SagittaArc: sagitta must be positive (use Line for flat).");
+  }
+  const radius = (sagitta * sagitta + (chord * chord) / 4) / (2 * sagitta);
+  return RadiusArc(start, end, radius, opts);
+}
+
+/** Arc from `start` with the given tangent to `end` (build123d `TangentArc`). */
+export function TangentArc(
+  start: readonly [number, number],
+  tangentDegrees: number,
+  end: readonly [number, number],
+  opts?: SketchOpts,
+): Wire {
+  // circle center lies on the line through start perpendicular to the tangent,
+  // equidistant to start and end
+  const t = (tangentDegrees * Math.PI) / 180;
+  const tx = Math.cos(t);
+  const ty = Math.sin(t);
+  // center = start + s * (-ty, tx); solve |center - end| = |center - start|
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const denom = -ty * dx + tx * dy;
+  if (Math.abs(denom) < 1e-12) {
+    throw new Error("TangentArc: end lies on the tangent line — no arc exists.");
+  }
+  const s = (dx * dx + dy * dy) / (2 * denom);
+  const cx = start[0] - ty * s;
+  const cy = start[1] + tx * s;
+  const radius = Math.abs(s);
+  const deg = (p: readonly [number, number]) => (Math.atan2(p[1] - cy, p[0] - cx) * 180) / Math.PI;
+  const a0 = deg(start);
+  const sweep = (deg(end) - a0 + 360) % 360;
+  void a0;
+  return CenterArc([cx, cy], radius, a0, sweep, opts);
+}
+
+/** Arc from `start` along `tangentDegrees`, `radius`, spanning `arcSize` (build123d `JernArc`). */
+export function JernArc(
+  start: readonly [number, number],
+  tangentDegrees: number,
+  radius: number,
+  arcSize: number,
+  opts?: SketchOpts,
+): Wire {
+  const t = (tangentDegrees * Math.PI) / 180;
+  const tx = Math.cos(t);
+  const ty = Math.sin(t);
+  // for a CCW arc the center is 90° left of the tangent
+  const cx = start[0] - ty * radius;
+  const cy = start[1] + tx * radius;
+  const a0 = (Math.atan2(start[1] - cy, start[0] - cx) * 180) / Math.PI;
+  return CenterArc([cx, cy], radius, a0, arcSize, opts);
+}
+
+/**
+ * Polyline with filleted joints (build123d `FilletPolyline`): straight runs
+ * of `radius`-arcs at every interior vertex.
+ */
+export function FilletPolyline(
+  points: readonly (readonly [number, number])[],
+  radius: number,
+  opts?: SketchOpts,
+): Wire {
+  if (points.length < 3) {
+    throw new Error("FilletPolyline: needs at least 3 points.");
+  }
+  const parts: Wire[] = [];
+  const shrink = (
+    a: readonly [number, number],
+    b: readonly [number, number],
+    t: number,
+  ): [number, number] => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const len = (a: readonly [number, number], b: readonly [number, number]) =>
+    Math.hypot(b[0] - a[0], b[1] - a[1]);
+  // tangent points: radius/|tan(θ/2)| along each segment — approximate with
+  // fixed trim distance r (exact for 90° corners, conservative otherwise)
+  const trim = (
+    p: readonly [number, number],
+    q: readonly [number, number],
+    back: boolean,
+  ): [number, number] => {
+    const d = len(p, q);
+    const t = Math.min(radius, d / 2) / d;
+    return back ? shrink(q, p, t) : shrink(p, q, t);
+  };
+  let prevEnd = trim(points[0] as [number, number], points[1] as [number, number], false);
+  parts.push(Line(points[0] as [number, number], prevEnd, opts));
+  for (let i = 1; i < points.length - 1; i++) {
+    const p = points[i] as [number, number];
+    const next = points[i + 1] as [number, number];
+    const t1 = trim(points[i - 1] as [number, number], p, true);
+    const t2 = trim(p, next, false);
+    parts.push(Line(prevEnd, t1, opts));
+    parts.push(ThreePointArc(t1, p, t2, opts));
+    prevEnd = t2;
+  }
+  parts.push(Line(prevEnd, points[points.length - 1] as [number, number], opts));
+  return combineWires(...parts);
+}
+
+/** Smooth spline interpolated THROUGH points (build123d `Spline`). */
+export function Spline(
+  points: readonly (readonly [number, number])[],
+  opts?: { periodic?: boolean } & SketchOpts,
+): Wire {
+  const f = frameOf(opts);
+  const world = points.map((pt) => local(f, pt, opts));
+  return record("sketchSpline", { points: world.length }, () =>
+    wireFromKernel(getKernel().makeBsplineThrough(world, opts?.periodic), planeOfFrame(f)),
+  );
+}
+
+/** B-spline by control points/poles (build123d `BSpline`). */
+export function BSpline(
+  poles: readonly (readonly [number, number])[],
+  opts?: { degree?: number } & SketchOpts,
+): Wire {
+  const f = frameOf(opts);
+  const world = poles.map((pt) => local(f, pt, opts));
+  return record("sketchBspline", { poles: world.length }, () =>
+    wireFromKernel(getKernel().makeBspline(world, opts?.degree), planeOfFrame(f)),
+  );
+}
+
+/**
+ * Superellipse (build123d `Superellipse`): |x/a|^n + |y/b|^n = 1, sampled
+ * and interpolated as a periodic spline (no analytic OCCT superellipse).
+ */
+export function Superellipse(a: number, b: number, n: number, opts?: SketchOpts): Wire {
+  const pts: Array<[number, number]> = [];
+  const samples = 64;
+  for (let i = 0; i < samples; i++) {
+    const t = (2 * Math.PI * i) / samples;
+    const ct = Math.cos(t);
+    const st = Math.sin(t);
+    const x = a * Math.sign(ct) * Math.abs(ct) ** (2 / n);
+    const y = b * Math.sign(st) * Math.abs(st) ** (2 / n);
+    pts.push([x, y]);
+  }
+  return Spline(pts, { periodic: true, ...opts });
+}
+
+/**
+ * Conic section arc — parabola/hyperbola (build123d
+ * `ParabolicCenterArc`/`HyperbolicCenterArc`): sampled-spline approximation
+ * (the kernel carries no analytic conic arc).
+ */
+export function ConicArc(
+  kind: "parabola" | "hyperbola",
+  focal: number,
+  tStart: number,
+  tEnd: number,
+  opts?: SketchOpts,
+): Wire {
+  const pts: Array<[number, number]> = [];
+  const samples = 24;
+  for (let i = 0; i <= samples; i++) {
+    const t = tStart + ((tEnd - tStart) * i) / samples;
+    const x = kind === "parabola" ? focal * t * t : focal * Math.cosh(t);
+    const y = kind === "parabola" ? 2 * focal * t : focal * Math.sinh(t);
+    pts.push([x, y]);
+  }
+  return Spline(pts, opts);
+}
+
+/** Helix wire (build123d `Helix`) — 3D, around the +Z axis. */
+export function Helix(radius: number, pitch: number, height: number): Wire {
+  return record("sketchHelix", { radius, pitch, height }, () =>
+    wireFromKernel(getKernel().makeHelix(radius, pitch, height)),
+  );
 }

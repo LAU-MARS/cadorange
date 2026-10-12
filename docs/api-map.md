@@ -132,6 +132,33 @@ CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z
    子体（其自身怪癖，实测 0.13.0）；cadorange 报所有子体之和（物理正确）。
    parity 用例 mirror_compound 已标注此差异。
 
+## 实现进度（2026-10-12，occt.ts 1.0.0，"126 核心 API 对齐"轮）
+
+**核心 API 覆盖 ≈ 91/126（72%）**（其中 Superellipse/ConicArc 为采样近似版）。
+本轮新增：loft/sweep/split/section/shell/draft/offset/scale/rotate/distance、
+31 个草图/曲线原语（Triangle/Trapezoid/RectangleRounded/三 Slot 变体/Sagitta/
+Tangent/Jern/Polar/Intersecting/FilletPolyline/Spline/BSpline/Ellipse/Superellipse/
+ConicArc/Helix）、Wedge、Hole 家族（hole/counterBoreHole/counterSinkHole）、
+单复数选择器、solids()/wires()、boundingBox/distanceTo、Location 代数
+（Pos/Rot/mul/inverse + `located()` 立即烘焙）、Mat3/Color、BRep/OBJ io。
+parity 22/22（新增 loft/offset/hole/wedge/ellipse 用例）。
+
+### 剩余 35 项处置
+- **不适用（10）**：Base*Object 抽象基类、add/insert（builder 语义）、
+  DraftAngleError、VectorLike/Matrix（由 Vec3/Mat3 承担）
+- **kernel 需求（11）**：EllipticalCenter/StartArc（椭圆弧）、Bezier、
+  ConvexPolyhedron（凸包）、project/project_workplane/make_hull/full_round/
+  trace（R15）、2D offset（R14）
+- **复杂求解器（4）**：ConstrainedArcs/ConstrainedLines/DoubleTangentArc/BlendCurve
+- **下批余量（10）**：Shell 类、Curve/UVFrame/OBB、Airfoil（数据文件）、
+  import_stl、edges_to_wires/new_edges/topo_explore_*、polar/delta 工具
+
+### 语义差异补充
+9. **shell vs offset**：occt.ts `shell` 是"挖内腔保外皮"；build123d
+   `shell(-t)` 是整体内缩。整体内缩用 cadorange `offset(s, distance)`。
+10. **凹凸分类**：tangent-blend 边（σ≈180°）我们判 smooth；build123d
+    有时归 convex——parity 仅对专项用例（l_bracket）严格比对凹凸计数。
+
 ## 实现进度（2026-10-10，occt.ts 0.10.0）
 
 M0 核心垂直切片已落地并全绿：kernel 适配、geom（Axis/isParallel）、topo

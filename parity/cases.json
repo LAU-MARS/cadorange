@@ -360,6 +360,101 @@
         }
       ],
       "result": "tube"
+    },
+    {
+      "name": "loft_cone",
+      "ops": [
+        {
+          "op": "sketchCircle",
+          "id": "a",
+          "radius": 5
+        },
+        {
+          "op": "sketchCircleAt",
+          "id": "b",
+          "radius": 8,
+          "origin": [0, 0, 10]
+        },
+        {
+          "op": "loftSketch",
+          "id": "c",
+          "parts": ["a", "b"]
+        }
+      ],
+      "result": "c",
+      "verticesTolerance": 2,
+      "$note": "seam-edge vertex bookkeeping differs (closed smooth sections count seam vertices differently)"
+    },
+    {
+      "name": "box_offset",
+      "ops": [
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 20,
+          "dy": 20,
+          "dz": 20
+        },
+        {
+          "op": "offsetSolid",
+          "id": "b",
+          "target": "a",
+          "distance": -2
+        }
+      ],
+      "result": "b"
+    },
+    {
+      "name": "box_hole_family",
+      "ops": [
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 20,
+          "dy": 20,
+          "dz": 5
+        },
+        {
+          "op": "holeOp",
+          "id": "b",
+          "target": "a",
+          "diameter": 6
+        }
+      ],
+      "result": "b"
+    },
+    {
+      "name": "wedge_block",
+      "ops": [
+        {
+          "op": "wedge",
+          "id": "a",
+          "dx": 10,
+          "dy": 8,
+          "dz": 6
+        }
+      ],
+      "result": "a"
+    },
+    {
+      "name": "ellipse_extrude",
+      "ops": [
+        {
+          "op": "sketchEllipse",
+          "id": "a",
+          "major": 5,
+          "minor": 3
+        },
+        {
+          "op": "extrudeSketch",
+          "id": "b",
+          "target": "a",
+          "amount": 2
+        }
+      ],
+      "result": "b",
+      "verticesTolerance": 2,
+      "$note": "seam-edge vertex bookkeeping differs (closed smooth sections count seam vertices differently)"
     }
   ]
 }

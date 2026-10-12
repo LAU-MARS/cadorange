@@ -138,12 +138,38 @@ export interface Kernel {
   ): ShapeHandle;
   /** Concatenate connected wires/edges into one wire, in order. */
   makeWire(parts: readonly ShapeHandle[]): ShapeHandle;
+  makeEllipse(majorRadius: number, minorRadius: number, origin: Vec3, normal: Vec3): ShapeHandle;
+  /** B-spline through control points (poles), clamped uniform knots. */
+  makeBspline(poles: readonly Vec3[], degree?: number): ShapeHandle;
+  /** Smooth B-spline interpolated THROUGH every point. */
+  makeBsplineThrough(points: readonly Vec3[], periodic?: boolean): ShapeHandle;
+  /** Helix wire of `radius`, climbing `pitch` per turn up to `height`. */
+  makeHelix(radius: number, pitch: number, height: number): ShapeHandle;
   /** Cap a planar outer wire into a face, with optional inner hole wires. */
   makeFace(outer: ShapeHandle, holes: readonly ShapeHandle[]): ShapeHandle;
   /** Extrude a planar profile (wire or face) along `vector` into a solid. */
   extrude(profile: ShapeHandle, vector: Vec3): ShapeHandle;
   /** Revolve a planar profile around the axis `origin → origin+direction`. */
   revolve(profile: ShapeHandle, origin: Vec3, direction: Vec3, angleDegrees: number): ShapeHandle;
+  /** Skin sections (wires/faces) into one solid; `ruled` = straight sections. */
+  loft(sections: readonly ShapeHandle[], ruled: boolean): ShapeHandle;
+  /** Sweep a planar profile along a spine wire. */
+  sweep(profile: ShapeHandle, spine: ShapeHandle): ShapeHandle;
+  /** Split by tools, keeping every fragment. */
+  split(s: ShapeHandle, tools: readonly ShapeHandle[]): ShapeHandle;
+  /** Intersection curves of two shapes' surfaces (an edge/compound). */
+  section(a: ShapeHandle, b: ShapeHandle): ShapeHandle;
+  /** Hollow into a shell of `thickness`; `openFaces` are 1-based openings. */
+  shell(s: ShapeHandle, thickness: number, openFaces: number[]): ShapeHandle;
+  /** Draft faces by `angleDegrees` (mold release). */
+  draft(s: ShapeHandle, angleDegrees: number, direction: Vec3, faces: number[]): ShapeHandle;
+  /** Uniform 3D offset: grow (>0) / shrink (<0) the whole solid. */
+  offsetSolid(s: ShapeHandle, distance: number): ShapeHandle;
+  scale(s: ShapeHandle, factor: number): ShapeHandle;
+  /** Minimum distance between two shapes. */
+  distance(a: ShapeHandle, b: ShapeHandle): number;
+  /** Sub-shape handles by type (order matches describe for Face/Edge/Vertex). */
+  subShapes(s: ShapeHandle, type: "Solid" | "Shell" | "Wire" | "Face"): ShapeHandle[];
 
   /**
    * Booleans clean by default (UnifySameDomain — same as build123d/CadQuery):
@@ -190,6 +216,10 @@ export interface Kernel {
   exportStl(s: ShapeHandle, tolerance?: number): string;
   exportGlb(s: ShapeHandle): Uint8Array;
   importStep(data: Uint8Array): ShapeHandle;
+  importBrep(data: Uint8Array): ShapeHandle;
+  exportBrep(s: ShapeHandle): Uint8Array;
+  /** Wavefront OBJ text. */
+  exportObj(s: ShapeHandle): string;
 
   /** Deterministic checksum (BRep serialization hash), for caching and eval replay. */
   hash(s: ShapeHandle): string;

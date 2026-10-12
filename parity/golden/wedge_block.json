@@ -1,0 +1,25 @@
+{
+  "name": "wedge_block",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 240.0,
+    "area": 281.2952303175248,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      10.0,
+      8.0,
+      6.000000000000001
+    ],
+    "faces": 5,
+    "edges": 9,
+    "vertices": 6,
+    "valid": true
+  }
+}

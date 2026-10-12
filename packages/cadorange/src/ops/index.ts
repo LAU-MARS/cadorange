@@ -6,8 +6,8 @@
 import { Axis, type Vec3, v } from "../geom";
 import { getKernel } from "../kernel/occt";
 import { record } from "../record";
-import type { Edge, Shape, ShapeList } from "../topo";
-import { type Solid, solidFromKernel, Wire } from "../topo";
+import type { Edge, Face, Shape, ShapeList } from "../topo";
+import { Shape as ShapeValue, type Solid, solidFromKernel, Wire } from "../topo";
 
 export type BooleanOp = "fuse" | "cut" | "common";
 
@@ -43,6 +43,92 @@ export function chamfer(
 
 export function translate(s: Shape, by: readonly [number, number, number]): Solid {
   return s.translate(by);
+}
+
+/** Rotate `angleDegrees` around the axis (through the origin by default). */
+export function rotate(s: Shape, axis: Axis, angleDegrees: number): Solid {
+  return record("rotate", { angleDegrees }, () =>
+    solidFromKernel(getKernel().rotate(s.handle, axis.direction, angleDegrees)),
+  );
+}
+
+export function scale(s: Shape, factor: number): Solid {
+  return record("scale", { factor }, () => solidFromKernel(getKernel().scale(s.handle, factor)));
+}
+
+/** Uniform 3D offset — grow (>0) / shrink (<0) the whole solid. */
+export function offset(s: Shape, distance: number): Solid {
+  return record("offset", { distance }, () =>
+    solidFromKernel(getKernel().offsetSolid(s.handle, distance)),
+  );
+}
+
+/** Skin sections (wires or faces) into one solid; `ruled` = straight ribs. */
+export function loft(sections: readonly Shape[], opts?: { ruled?: boolean }): Solid {
+  return record("loft", { sections: sections.length, ...opts }, () =>
+    solidFromKernel(
+      getKernel().loft(
+        sections.map((x) => x.handle),
+        opts?.ruled ?? false,
+      ),
+    ),
+  );
+}
+
+/** Sweep a planar profile along a spine wire (circle on circle -> torus). */
+export function sweep(profile: Shape, spine: Shape): Solid {
+  return record("sweep", {}, () =>
+    solidFromKernel(getKernel().sweep(profile.handle, spine.handle)),
+  );
+}
+
+/** Split by tools, keeping every fragment (reassembles to the original). */
+export function split(s: Shape, tools: readonly Shape[] | Shape): Solid {
+  const list = tools instanceof ShapeValue ? [tools] : tools;
+  return record("split", { tools: list.length }, () =>
+    solidFromKernel(
+      getKernel().split(
+        s.handle,
+        list.map((t) => t.handle),
+      ),
+    ),
+  );
+}
+
+/** Intersection curves of two shapes' surfaces — an edge/compound shape. */
+export function section(a: Shape, b: Shape): Shape {
+  return record("section", {}, () => new ShapeValue(getKernel().section(a.handle, b.handle)));
+}
+
+/** Hollow into a shell of `thickness` (build123d `thicken`/wall pattern). */
+export function shell(s: Shape, thickness: number, opts?: { open?: readonly Face[] }): Solid {
+  const openFaces = opts?.open?.map((f) => f.index) ?? [];
+  return record("shell", { thickness, openFaces }, () =>
+    solidFromKernel(getKernel().shell(s.handle, thickness, openFaces)),
+  );
+}
+
+/** Tilt faces by `angleDegrees` for mold release (build123d `draft`). */
+export function draft(
+  s: Shape,
+  angleDegrees: number,
+  opts?: { direction?: Vec3; faces?: readonly Face[] },
+): Solid {
+  return record("draft", { angleDegrees }, () =>
+    solidFromKernel(
+      getKernel().draft(
+        s.handle,
+        angleDegrees,
+        opts?.direction ?? [0, 0, 1],
+        opts?.faces?.map((f) => f.index) ?? [],
+      ),
+    ),
+  );
+}
+
+/** Minimum distance between two shapes (build123d `topo_distance_to`). */
+export function distance(a: Shape, b: Shape): number {
+  return getKernel().distance(a.handle, b.handle);
 }
 
 /** Mirror across a plane or about an axis (build123d `mirror()`). */

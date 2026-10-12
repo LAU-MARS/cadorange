@@ -1,0 +1,25 @@
+{
+  "name": "box_hole_family",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 1858.628330588459,
+    "area": 1237.6991118430772,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      20.0,
+      20.0,
+      5.0
+    ],
+    "faces": 7,
+    "edges": 15,
+    "vertices": 10,
+    "valid": true
+  }
+}

@@ -15,21 +15,27 @@ import type { Solid } from "../src/index";
 import {
   Axis,
   Box,
+  Circle,
   Cone,
   Cylinder,
   chamfer,
   compound,
+  Ellipse,
   extrude,
   faceOf,
   fillet,
   init,
+  loft,
   mirror,
+  offset,
   Rectangle,
   RegularPolygon,
   revolve,
   SlotCenterToCenter,
   Sphere,
+  shell,
   Torus,
+  Wedge,
 } from "../src/index";
 
 const PARITY_DIR = join(import.meta.dirname, "..", "..", "..", "parity");
@@ -176,6 +182,48 @@ function runCase(c: Case): Solid {
           },
         );
         shapes.set(o.id, base.fuse(pad));
+        break;
+      }
+      case "offsetSolid": {
+        shapes.set(o.id, offset(shapes.get(o.target as string) as Solid, o.distance as number));
+        break;
+      }
+      case "sketchCircle": {
+        shapes.set(o.id, Circle(o.radius as number));
+        break;
+      }
+      case "sketchCircleAt": {
+        shapes.set(
+          o.id,
+          Circle(o.radius as number, {
+            on: {
+              origin: o.origin as [number, number, number],
+              normal: [0, 0, 1],
+              xDir: [1, 0, 0],
+            },
+          }),
+        );
+        break;
+      }
+      case "loftSketch": {
+        const parts = (o.parts as string[]).map((id) => shapes.get(id) as Solid);
+        shapes.set(o.id, loft(parts));
+        break;
+      }
+      case "shellOp": {
+        shapes.set(o.id, shell(shapes.get(o.target as string) as Solid, o.thickness as number));
+        break;
+      }
+      case "holeOp": {
+        shapes.set(o.id, (shapes.get(o.target as string) as Solid).hole(o.diameter as number));
+        break;
+      }
+      case "wedge": {
+        shapes.set(o.id, Wedge({ dx: o.dx as number, dy: o.dy as number, dz: o.dz as number }));
+        break;
+      }
+      case "sketchEllipse": {
+        shapes.set(o.id, Ellipse(o.major as number, o.minor as number));
         break;
       }
       case "mirror": {

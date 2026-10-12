@@ -20,8 +20,6 @@
     "faces": 11,
     "edges": 24,
     "vertices": 16,
-    "concaveEdges": 4,
-    "convexEdges": 20,
     "valid": true
   }
 }

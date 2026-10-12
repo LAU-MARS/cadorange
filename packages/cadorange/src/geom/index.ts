@@ -64,8 +64,8 @@ export function axisByName(name: AxisName): Axis {
   return name === "X" ? Axis.X : name === "Y" ? Axis.Y : Axis.Z;
 }
 
-/** Placement: origin plus optional local axis directions. */
-export interface Location {
+/** Placement data: origin plus optional local axis directions. */
+export interface Placement {
   origin: Vec3;
   /** Local Z direction; defaults to the global +Z. */
   zDir?: Vec3;
@@ -73,8 +73,176 @@ export interface Location {
   xDir?: Vec3;
 }
 
-/** Short alias used by the kernel interface. */
-export type Loc = Location;
+/** Short alias used across the kernel and primitives. */
+export type Loc = Placement;
+
+/**
+ * A composed placement (build123d `Location` algebra). `mul` composes like
+ * build123d's `*` (this applied after `other`); `Shape.located()` bakes it
+ * immediately — there is no lazy chain over the WASM kernel.
+ */
+export class Location {
+  readonly origin: Vec3;
+  readonly zDir: Vec3;
+  readonly xDir: Vec3;
+
+  constructor(origin: Vec3, zDir: Vec3 = [0, 0, 1], xDir: Vec3 = [1, 0, 0]) {
+    this.origin = origin;
+    this.zDir = v.normalize(zDir);
+    this.xDir = v.normalize(xDir);
+  }
+
+  static identity(): Location {
+    return new Location([0, 0, 0]);
+  }
+
+  /** Rotation matrix columns = (xDir, yDir, zDir). */
+  rotation(): Mat3 {
+    const y = v.cross(this.zDir, this.xDir);
+    return [
+      [this.xDir[0] ?? 0, y[0] ?? 0, this.zDir[0] ?? 0],
+      [this.xDir[1] ?? 0, y[1] ?? 0, this.zDir[1] ?? 0],
+      [this.xDir[2] ?? 0, y[2] ?? 0, this.zDir[2] ?? 0],
+    ];
+  }
+
+  /** this ∘ other: apply `other` first, then `this` (build123d `this * other`). */
+  mul(other: Location): Location {
+    const ra = this.rotation();
+    const rb = other.rotation();
+    const r = mul3(ra, rb);
+    const origin = m3apply(ra, other.origin);
+    return new Location(
+      v.add(this.origin, origin),
+      [r[0][2], r[1][2], r[2][2]],
+      [r[0][0], r[1][0], r[2][0]],
+    );
+  }
+
+  inverse(): Location {
+    const r = this.rotation();
+    const rt = transpose3(r);
+    const origin = m3apply(rt, v.scale(this.origin, -1));
+    return new Location(origin, [rt[0][2], rt[1][2], rt[2][2]], [rt[0][0], rt[1][0], rt[2][0]]);
+  }
+}
+
+/** `Pos(x, y, z)` — pure translation (build123d `Pos`). */
+export function Pos(x: number, y: number, z: number): Location {
+  return new Location([x, y, z]);
+}
+
+/** `Rot(xDeg, yDeg, zDeg)` — intrinsic XYZ Euler rotation (build123d `Rot`). */
+export function Rot(xDeg: number, yDeg: number, zDeg: number): Location {
+  const d = Math.PI / 180;
+  const cx = Math.cos(xDeg * d);
+  const sx = Math.sin(xDeg * d);
+  const cy = Math.cos(yDeg * d);
+  const sy = Math.sin(yDeg * d);
+  const cz = Math.cos(zDeg * d);
+  const sz = Math.sin(zDeg * d);
+  const rx: Mat3 = [
+    [1, 0, 0],
+    [0, cx, -sx],
+    [0, sx, cx],
+  ];
+  const ry: Mat3 = [
+    [cy, 0, sy],
+    [0, 1, 0],
+    [-sy, 0, cy],
+  ];
+  const rz: Mat3 = [
+    [cz, -sz, 0],
+    [sz, cz, 0],
+    [0, 0, 1],
+  ];
+  const r = mul3(rz, mul3(ry, rx));
+  return new Location([0, 0, 0], [r[0][2], r[1][2], r[2][2]], [r[0][0], r[1][0], r[2][0]]);
+}
+
+/* ------------------------------ 3x3 matrices ----------------------------- */
+
+export type Mat3 = readonly [
+  readonly [number, number, number],
+  readonly [number, number, number],
+  readonly [number, number, number],
+];
+
+export function mul3(a: Mat3, b: Mat3): Mat3 {
+  const out: number[][] = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ];
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      let sum = 0;
+      for (let k = 0; k < 3; k++) {
+        sum += (a[i]?.[k] ?? 0) * (b[k]?.[j] ?? 0);
+      }
+      const row = out[i];
+      if (row) {
+        row[j] = sum;
+      }
+    }
+  }
+  return out as unknown as Mat3;
+}
+
+export function transpose3(a: Mat3): Mat3 {
+  return [
+    [a[0][0], a[1][0], a[2][0]],
+    [a[0][1], a[1][1], a[2][1]],
+    [a[0][2], a[1][2], a[2][2]],
+  ];
+}
+
+export function m3apply(a: Mat3, p: Vec3): Vec3 {
+  return [
+    a[0][0] * p[0] + a[0][1] * p[1] + a[0][2] * p[2],
+    a[1][0] * p[0] + a[1][1] * p[1] + a[1][2] * p[2],
+    a[2][0] * p[0] + a[2][1] * p[1] + a[2][2] * p[2],
+  ];
+}
+
+/** Rotation matrix -> axis-angle (degrees) for kernel.rotate. */
+export function mat3ToAxisAngle(a: Mat3): { axis: Vec3; angleDegrees: number } {
+  const angle = Math.acos(Math.min(1, Math.max(-1, (a[0][0] + a[1][1] + a[2][2] - 1) / 2)));
+  if (angle < 1e-9) {
+    return { axis: [0, 0, 1], angleDegrees: 0 };
+  }
+  if (Math.PI - angle < 1e-6) {
+    // near 180°: axis from the diagonal
+    const x = Math.sqrt(Math.max(0, (a[0][0] + 1) / 2));
+    const y = Math.sqrt(Math.max(0, (a[1][1] + 1) / 2));
+    const z = Math.sqrt(Math.max(0, (a[2][2] + 1) / 2));
+    return { axis: v.normalize([x, y, z]), angleDegrees: 180 };
+  }
+  const axis = v.normalize([
+    (a[2][1] - a[1][2]) / 2,
+    (a[0][2] - a[2][0]) / 2,
+    (a[1][0] - a[0][1]) / 2,
+  ]);
+  return { axis, angleDegrees: (angle * 180) / Math.PI };
+}
+
+/** RGBA color value (build123d `Color` — a plain value here, no OCCT binding). */
+export interface Color {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+  readonly a?: number;
+}
+
+export function color(hex: string, a?: number): Color {
+  const h = hex.replace("#", "");
+  return {
+    r: Number.parseInt(h.slice(0, 2), 16),
+    g: Number.parseInt(h.slice(2, 4), 16),
+    b: Number.parseInt(h.slice(4, 6), 16),
+    ...(a !== undefined ? { a } : {}),
+  };
+}
 
 export interface Axis3 {
   origin: Vec3;

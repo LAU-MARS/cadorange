@@ -1,0 +1,25 @@
+{
+  "name": "loft_cone",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 1350.8848410436108,
+    "area": 705.9912191545396,
+    "bboxMin": [
+      -8.0000001,
+      -8.0000001,
+      -1e-07
+    ],
+    "bboxMax": [
+      8.0000001,
+      8.0000001,
+      10.0000001
+    ],
+    "faces": 3,
+    "edges": 3,
+    "vertices": 2,
+    "valid": true
+  }
+}

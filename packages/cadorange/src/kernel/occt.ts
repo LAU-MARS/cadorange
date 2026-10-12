@@ -1,4 +1,4 @@
-import { type MeshData, meshToAsciiStl, type OccSession, type OccShape } from "occt.ts";
+import { type MeshData, meshToAsciiStl, meshToObj, type OccSession, type OccShape } from "occt.ts";
 import { type Vec3, v } from "../geom";
 import type {
   CurveKind,
@@ -204,6 +204,81 @@ class OcctKernel implements Kernel {
         angleDegrees,
       }),
     );
+  }
+
+  makeEllipse(majorRadius: number, minorRadius: number, origin: Vec3, normal: Vec3): ShapeHandle {
+    return this.#adopt(this.#occ.makeEllipse(majorRadius, minorRadius, { origin, normal }));
+  }
+
+  makeBspline(poles: readonly Vec3[], degree?: number): ShapeHandle {
+    return this.#adopt(this.#occ.makeBspline(poles, degree !== undefined ? { degree } : undefined));
+  }
+
+  makeBsplineThrough(points: readonly Vec3[], periodic?: boolean): ShapeHandle {
+    return this.#adopt(
+      this.#occ.makeBsplineThrough(points, periodic !== undefined ? { periodic } : undefined),
+    );
+  }
+
+  makeHelix(radius: number, pitch: number, height: number): ShapeHandle {
+    return this.#adopt(this.#occ.makeHelix(radius, pitch, height));
+  }
+
+  loft(sections: readonly ShapeHandle[], ruled: boolean): ShapeHandle {
+    return this.#adopt(
+      this.#occ.loft(
+        sections.map((h) => this.#raw(h)),
+        ruled ? { ruled: true } : undefined,
+      ),
+    );
+  }
+
+  sweep(profile: ShapeHandle, spine: ShapeHandle): ShapeHandle {
+    return this.#adopt(this.#occ.sweep(this.#raw(profile), this.#raw(spine)));
+  }
+
+  split(s: ShapeHandle, tools: readonly ShapeHandle[]): ShapeHandle {
+    return this.#adopt(
+      this.#occ.split(
+        this.#raw(s),
+        tools.map((h) => this.#raw(h)),
+      ),
+    );
+  }
+
+  section(a: ShapeHandle, b: ShapeHandle): ShapeHandle {
+    return this.#adopt(this.#occ.section(this.#raw(a), this.#raw(b)));
+  }
+
+  shell(s: ShapeHandle, thickness: number, openFaces: number[]): ShapeHandle {
+    return this.#adopt(
+      this.#occ.shell(this.#raw(s), thickness, openFaces.length > 0 ? { openFaces } : undefined),
+    );
+  }
+
+  draft(s: ShapeHandle, angleDegrees: number, direction: Vec3, faces: number[]): ShapeHandle {
+    return this.#adopt(
+      this.#occ.draft(this.#raw(s), angleDegrees, {
+        direction,
+        ...(faces.length > 0 ? { faces } : {}),
+      }),
+    );
+  }
+
+  offsetSolid(s: ShapeHandle, distance: number): ShapeHandle {
+    return this.#adopt(this.#occ.offsetSolid(this.#raw(s), distance));
+  }
+
+  scale(s: ShapeHandle, factor: number): ShapeHandle {
+    return this.#adopt(this.#occ.scale(this.#raw(s), factor));
+  }
+
+  distance(a: ShapeHandle, b: ShapeHandle): number {
+    return this.#occ.distance(this.#raw(a), this.#raw(b)).distance;
+  }
+
+  subShapes(s: ShapeHandle, type: "Solid" | "Shell" | "Wire" | "Face"): ShapeHandle[] {
+    return this.#occ.subShapes(this.#raw(s), type).map((x) => this.#adopt(x));
   }
 
   boolean(
@@ -566,7 +641,7 @@ class OcctKernel implements Kernel {
     const second = boundaries[1] ?? 0;
     const [b1, b2] = first < second ? [first, second] : [second, first];
     // material is the arc that contains a known "in" probe
-    const firstIn = ring.findIndex((c) => c === "in");
+    const firstIn = ring.indexOf("in");
     if (firstIn < 0) {
       return undefined;
     }
@@ -614,6 +689,19 @@ class OcctKernel implements Kernel {
 
   importStep(data: Uint8Array): ShapeHandle {
     return this.#adopt(this.#occ.readStep(data));
+  }
+
+  importBrep(data: Uint8Array): ShapeHandle {
+    return this.#adopt(this.#occ.readBrep(data));
+  }
+
+  exportBrep(s: ShapeHandle): Uint8Array {
+    return this.#occ.writeBrep(this.#raw(s));
+  }
+
+  exportObj(s: ShapeHandle): string {
+    const mesh = this.#occ.tessellate(this.#raw(s));
+    return meshToObj(mesh);
   }
 
   hash(s: ShapeHandle): string {
