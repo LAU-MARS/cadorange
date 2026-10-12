@@ -17,9 +17,9 @@
  */
 
 import { Axis } from "../geom";
-import { Edge, Face } from "../topo";
+import { Edge, Face, Vertex } from "../topo";
 
-export type SubShape = Face | Edge;
+export type SubShape = Face | Edge | Vertex;
 
 export interface Selector {
   /** The source string, for error messages and op-log readability. */
@@ -180,11 +180,14 @@ function apply(node: Node, items: readonly SubShape[]): SubShape[] {
     case "type": {
       const isFace = node.kind === "face" || node.kind === "shell";
       const isEdge = node.kind === "edge" || node.kind === "wire";
-      if (!isFace && !isEdge) {
-        // #solid/#vertex/... — never present in an M0 sub-shape list.
+      const isVertex = node.kind === "vertex";
+      if (!isFace && !isEdge && !isVertex) {
+        // #solid/... — never present in a sub-shape list.
         return [];
       }
-      return items.filter((s) => (isFace ? s instanceof Face : s instanceof Edge));
+      return items.filter((s) =>
+        isFace ? s instanceof Face : isEdge ? s instanceof Edge : s instanceof Vertex,
+      );
     }
     case "dir": {
       const axis = AXES[node.axis];
@@ -195,6 +198,9 @@ function apply(node: Node, items: readonly SubShape[]): SubShape[] {
             s.meta.normal !== undefined &&
             axis.isParallel(new Axis(s.meta.center, s.meta.normal))
           );
+        }
+        if (s instanceof Vertex) {
+          return false; // a point has no direction
         }
         return (
           s.meta.curve === "line" &&

@@ -1,5 +1,17 @@
 # cadorange
 
+## 0.4.0
+
+### Minor Changes
+
+- build123d behavior alignment: vertices, mirror, asymmetric chamfer, compound (kernel: occt.ts 1.0.0).
+  
+  - `.vertices()` — Vertex sub-shape views with position-based selection (`filterByPosition`, `sortBy(Axis)`), `#vertex` in the string selector DSL; `describe()` now reports a `vertices` count
+  - `mirror({ plane | axis })` — across a plane or about an axis line, build123d `mirror()` semantics
+  - `chamfer(part, edges, distance, length2?)` — asymmetric bevels (`length2` on the second adjacent face)
+  - `compound(shapes)` — multi-body container for disjoint parts; volume reports the sum of children (build123d's `Compound.volume` reports one child only — documented divergence)
+  - Parity grows to 12/12 with the strictest tolerances, including exact vertex counts against Python build123d
+
 ## 0.3.0
 
 ### Minor Changes

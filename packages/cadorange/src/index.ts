@@ -20,16 +20,19 @@ export type {
   ShapeHandle,
   ShapeMeta,
   SurfaceKind,
+  VertexMeta,
 } from "./kernel";
 export { init } from "./kernel";
 export {
   chamfer,
   common,
+  compound,
   cut,
   extrude,
   fillet,
   fuse,
   intersect,
+  mirror,
   revolve,
   translate,
 } from "./ops";
@@ -39,4 +42,4 @@ export { onOp, record } from "./record";
 export type { Selector, SubShape } from "./selectors";
 export { parseSelector } from "./selectors";
 export type { Describe } from "./topo";
-export { Edge, Face, Shape, ShapeList, Solid } from "./topo";
+export { Edge, Face, Shape, ShapeList, Solid, Vertex } from "./topo";

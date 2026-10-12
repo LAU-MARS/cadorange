@@ -3,7 +3,10 @@
  * the shared `record()` entry (docs/architecture.md §3.3).
  */
 
+import { getKernel } from "../kernel/occt";
+import { record } from "../record";
 import type { Edge, Shape, ShapeList, Solid } from "../topo";
+import { solidFromKernel } from "../topo";
 import { todo } from "../util";
 
 export type BooleanOp = "fuse" | "cut" | "common";
@@ -28,17 +31,42 @@ export function fillet(s: Shape, edges: ShapeList<Edge> | readonly Edge[], radiu
   return s.fillet(edges, radius);
 }
 
-/** Equal-distance chamfer; asymmetric needs kernel support (R3). */
+/** Chamfer; `length2` makes the bevel asymmetric (build123d `length2`). */
 export function chamfer(
   s: Shape,
   edges: ShapeList<Edge> | readonly Edge[],
   distance: number,
+  length2?: number,
 ): Solid {
-  return s.chamfer(edges, distance);
+  return s.chamfer(edges, distance, length2);
 }
 
 export function translate(s: Shape, by: readonly [number, number, number]): Solid {
   return s.translate(by);
+}
+
+/** Mirror across a plane or about an axis (build123d `mirror()`). */
+export function mirror(
+  s: Shape,
+  opts: {
+    plane?: {
+      origin?: readonly [number, number, number];
+      normal: readonly [number, number, number];
+    };
+    axis?: {
+      origin?: readonly [number, number, number];
+      direction: readonly [number, number, number];
+    };
+  },
+): Solid {
+  return s.mirror(opts);
+}
+
+/** Multi-body container for disjoint parts (build123d `Compound`). */
+export function compound(shapes: readonly Shape[]): Solid {
+  return record("compound", { parts: shapes.map((s) => s.handle.id) }, () =>
+    solidFromKernel(getKernel().compound(shapes.map((s) => s.handle))),
+  );
 }
 
 /** M1: extrude a 2D sketch into a solid. */

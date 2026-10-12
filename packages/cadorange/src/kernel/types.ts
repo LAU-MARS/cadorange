@@ -80,7 +80,14 @@ export interface ShapeMeta {
   readonly valid: boolean;
   readonly faces: readonly FaceMeta[];
   readonly edges: readonly EdgeMeta[];
+  readonly vertices: readonly VertexMeta[];
   readonly holes: readonly HoleMeta[];
+}
+
+/** Metadata for one vertex. `index` is 1-based, like faces/edges. */
+export interface VertexMeta {
+  readonly index: number;
+  readonly position: Vec3;
 }
 
 /**
@@ -114,10 +121,21 @@ export interface Kernel {
 
   /** `edgeIndices` are 1-based indices into `meta(s).edges`. Empty = all edges. */
   fillet(s: ShapeHandle, radius: number, edgeIndices: number[]): ShapeHandle;
-  chamfer(s: ShapeHandle, distance: number, edgeIndices: number[]): ShapeHandle;
+  /** Asymmetric bevel when `length2` is given (distance/length2 on the two adjacent faces). */
+  chamfer(s: ShapeHandle, distance: number, edgeIndices: number[], length2?: number): ShapeHandle;
 
   translate(s: ShapeHandle, by: Vec3): ShapeHandle;
   rotate(s: ShapeHandle, axisDir: Vec3, angleDegrees: number): ShapeHandle;
+  /** Mirror across a plane (3D) or about an axis line (2D flip) — build123d `mirror()`. */
+  mirror(
+    s: ShapeHandle,
+    opts: {
+      plane?: { origin?: Vec3; normal: Vec3 };
+      axis?: { origin?: Vec3; direction: Vec3 };
+    },
+  ): ShapeHandle;
+  /** Multi-body container for disjoint parts (build123d `Compound`). */
+  compound(shapes: readonly ShapeHandle[]): ShapeHandle;
 
   /** One interrogation call; implementations cache per handle. */
   meta(s: ShapeHandle): ShapeMeta;

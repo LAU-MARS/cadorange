@@ -7,6 +7,7 @@ import {
   Box,
   Cylinder,
   chamfer,
+  compound,
   exportStep,
   exportStl,
   importStep,
@@ -179,5 +180,44 @@ describe("io", () => {
 
     const path = join(tmpdir(), `cadorange-test-${Date.now()}.step`);
     await b.export(path);
+  });
+});
+
+describe("M0.5 alignment (vertices, mirror, asymmetric chamfer, compound)", () => {
+  it("vertices() counts and positions like build123d", () => {
+    const verts = plate.vertices();
+    expect(verts.count()).toBe(8);
+    expect(plate.vertices().filterByPosition(Axis.Z, -0.5, 0.5).count()).toBe(4); // bottom corners
+    const bottom = verts.sortByKey((v) => v.center[2] + v.center[0] * 1e-6).first();
+    expect(bottom?.center).toEqual([0, 0, 0]);
+    expect(plate.describe().vertices).toBe(8);
+  });
+
+  it('"#vertex" string selector works', () => {
+    expect(parseSelector("#vertex").select([...plate.vertices()]).length).toBe(8);
+    expect(parseSelector("not #vertex").select([...plate.vertices()]).length).toBe(0);
+  });
+
+  it("mirror flips geometry across a plane", () => {
+    const m = Box(20, 20, 10).mirror({ plane: { origin: [-1, 0, 0], normal: [1, 0, 0] } });
+    expect(m.volume()).toBeCloseTo(4000, 4);
+    expect(Math.round(m.meta().bbox.min[0])).toBe(-22);
+    expect(Math.round(m.meta().bbox.max[0])).toBe(-2);
+  });
+
+  it("compound holds disjoint bodies", () => {
+    const a = Box(20, 20, 10);
+    const m = a.mirror({ plane: { origin: [-1, 0, 0], normal: [1, 0, 0] } });
+    const both = compound([a, m]);
+    expect(both.volume()).toBeCloseTo(8000, 4);
+    expect(both.describe().faces).toBe(12);
+    expect(both.meta().shapeType).toBe("Compound");
+  });
+
+  it("asymmetric chamfer removes exact wedges", () => {
+    const box = Box(20, 20, 20);
+    const c = chamfer(box, box.edges().filterBy(Axis.Z), 2, 3);
+    // 4 wedges: (d * l2 / 2) * height
+    expect(c.volume()).toBeCloseTo(8000 - 4 * 3 * 20, 4);
   });
 });

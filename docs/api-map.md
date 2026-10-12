@@ -115,13 +115,16 @@ CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z
 3. **Location 立即烘焙**：occt.ts 变换立即执行返回新 shape；无 `Loc * Loc` 惰性链。
 4. **子形状身份**：Edge/Face 是视图对象（父 shape + describe 索引），跨 op 不追踪
    （build123d label 系统待 occt.ts R7 tag 支撑）。M0 规则：blend 的边必须属于被操作的 shape。
-5. **chamfer 暂等距 / 无 `.vertices()` / 无 mirror**：内核已就绪（0.10.0 的
-   `length2`/`vertices`/`mirror`），cadorange 公开 API 待采纳（见
-   occt-requirements.md 文末"待采纳"清单）。
+5. ~~chamfer 暂等距 / 无 `.vertices()` / 无 mirror~~：0.4.0 起全部落地——
+   `chamfer(part, edges, distance, length2?)`、`.vertices()`（Vertex 视图 +
+   `#vertex` 选择器）、`mirror({plane|axis})`、`compound(shapes)`。
 6. **describe() 是统一体检出口**：`volume/area/bbox/center/isValid` 走 `describe()` 或
    显式方法，两处数值必须同源。
 7. ~~fuse 结果不做同域合并~~：0.10.0 起布尔默认 clean（UnifySameDomain），
    与 build123d 行为一致；`{ clean: false }` 保留原始碎片拓扑。
+8. **Compound.volume 差异（有意）**：build123d 的 `Compound.volume` 只报单个
+   子体（其自身怪癖，实测 0.13.0）；cadorange 报所有子体之和（物理正确）。
+   parity 用例 mirror_compound 已标注此差异。
 
 ## 实现进度（2026-10-10，occt.ts 0.10.0）
 
@@ -129,5 +132,6 @@ M0 核心垂直切片已落地并全绿：kernel 适配、geom（Axis/isParallel
 （Shape/Solid/Face/Edge 视图/ShapeList）、五原语、布尔（默认 clean + 透传）、
 fillet/chamfer、选择器谓词内核 + CadQuery 字符串解析、workplane 门面（README
 示例可跑）、STEP/STL/GLB 导出 + STEP 导入、record() 全量记账。
-对标度量基线（parity 10/10，最严容差）：**volume/area 与 build123d 逐位一致
-（含 blend 用例），面/边计数完全一致**。已发布 `cadorange@0.1.0`。
+对标度量基线（parity 12/12，最严容差）：**volume/area 与 build123d 逐位一致
+（含 blend 用例），面/边/顶点计数完全一致**。occt.ts 1.0.0 起 raw 层
+（`toRaw/fromRaw` + 152 个 OCCT 原始类）解锁了 R7-R9 的 kernel 层自研路径。

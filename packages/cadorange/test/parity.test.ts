@@ -12,7 +12,19 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Solid } from "../src/index";
-import { Axis, Box, Cone, Cylinder, chamfer, fillet, init, Sphere, Torus } from "../src/index";
+import {
+  Axis,
+  Box,
+  Cone,
+  Cylinder,
+  chamfer,
+  compound,
+  fillet,
+  init,
+  mirror,
+  Sphere,
+  Torus,
+} from "../src/index";
 
 const PARITY_DIR = join(import.meta.dirname, "..", "..", "..", "parity");
 
@@ -34,6 +46,8 @@ interface Case {
   bboxTolerance?: number;
   facesTolerance?: number;
   edgesTolerance?: number;
+  verticesTolerance?: number;
+  volumeTolerance?: number;
 }
 
 interface Golden {
@@ -45,6 +59,7 @@ interface Golden {
     bboxMax: number[];
     faces: number;
     edges: number;
+    vertices: number;
     valid: boolean;
   };
 }
@@ -96,7 +111,37 @@ function runCase(c: Case): Solid {
       }
       case "chamferZ": {
         const part = shapes.get(o.target as string) as Solid;
-        shapes.set(o.id, chamfer(part, part.edges().filterBy(Axis.Z), o.distance as number));
+        shapes.set(
+          o.id,
+          chamfer(
+            part,
+            part.edges().filterBy(Axis.Z),
+            o.distance as number,
+            o.length2 as number | undefined,
+          ),
+        );
+        break;
+      }
+      case "mirror": {
+        const [ox, oy, oz, nx, ny, nz] = o.plane as [
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+        ];
+        shapes.set(
+          o.id,
+          mirror(shapes.get(o.target as string) as Solid, {
+            plane: { origin: [ox, oy, oz], normal: [nx, ny, nz] },
+          }),
+        );
+        break;
+      }
+      case "compound": {
+        const parts = (o.parts as string[]).map((id) => shapes.get(id) as Solid);
+        shapes.set(o.id, compound(parts));
         break;
       }
       default:
@@ -127,7 +172,8 @@ describe("parity vs build123d", () => {
       // analytic surfaces agree to floating-point noise; blends (fillet/chamfer)
       // may differ slightly across OCCT builds
       const relTol = /fillet|chamfer/.test(c.name) ? 1e-3 : 1e-4;
-      expect(Math.abs(d.volume - m.volume) / Math.abs(m.volume)).toBeLessThan(relTol);
+      const volTol = c.volumeTolerance ?? relTol * Math.abs(m.volume);
+      expect(Math.abs(d.volume - m.volume)).toBeLessThan(volTol);
       expect(Math.abs(d.area - m.area) / Math.abs(m.area)).toBeLessThan(relTol);
 
       const bboxTol = c.bboxTolerance ?? 1e-4;
@@ -140,6 +186,7 @@ describe("parity vs build123d", () => {
       // describe() enumeration is TopExp-aligned (occt.ts >= 0.10.0)
       expect(Math.abs(d.faces - m.faces)).toBeLessThanOrEqual(c.facesTolerance ?? 0);
       expect(Math.abs(d.edges - m.edges)).toBeLessThanOrEqual(c.edgesTolerance ?? 0);
+      expect(Math.abs(d.vertices - m.vertices)).toBeLessThanOrEqual(c.verticesTolerance ?? 0);
       expect(d.valid).toBe(m.valid);
     });
   }

@@ -9,4 +9,5 @@ export type {
   ShapeHandle,
   ShapeMeta,
   SurfaceKind,
+  VertexMeta,
 } from "./types";

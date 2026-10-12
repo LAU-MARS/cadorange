@@ -50,11 +50,22 @@ def build(op: dict, shapes: dict):
         if not isinstance(shape, bd.Shape):
             shape = shape[0]
         return shape
+    elif kind == "mirror":
+        part = shapes[op["target"]]
+        ox, oy, oz, nx, ny, nz = op["plane"]
+        about = bd.Plane(origin=(ox, oy, oz), z_dir=(nx, ny, nz))
+        mirrored = bd.mirror([part], about)
+        return mirrored[0] if isinstance(mirrored, (list, tuple)) else mirrored
+    elif kind == "compound":
+        return bd.Compound(children=[shapes[i] for i in op["parts"]])
     elif kind == "filletZ":
         part = shapes[op["target"]]
         return bd.fillet(part.edges().filter_by(bd.Axis.Z), op["radius"])
     elif kind == "chamferZ":
         part = shapes[op["target"]]
+        length2 = op.get("length2")
+        if length2 is not None:
+            return bd.chamfer(part.edges().filter_by(bd.Axis.Z), op["distance"], length2)
         return bd.chamfer(part.edges().filter_by(bd.Axis.Z), op["distance"])
     else:
         raise ValueError(f"unknown op {kind!r}")
@@ -70,6 +81,7 @@ def metrics(part) -> dict:
         "bboxMax": [bb.max.X, bb.max.Y, bb.max.Z],
         "faces": len(part.faces()),
         "edges": len(part.edges()),
+        "vertices": len(part.vertices()),
         "valid": part.is_valid,
     }
 

@@ -13,7 +13,7 @@
 
 import { Axis, type Plane as PlaneT, type Vec3, v } from "../geom";
 import { getKernel } from "../kernel/occt";
-import type { EdgeMeta, FaceMeta, ShapeHandle, ShapeMeta } from "../kernel/types";
+import type { EdgeMeta, FaceMeta, ShapeHandle, ShapeMeta, VertexMeta } from "../kernel/types";
 import { record } from "../record";
 
 /** Plain-JSON shape summary returned by `describe()`. */
@@ -24,6 +24,7 @@ export interface Describe {
   center: Vec3;
   faces: number;
   edges: number;
+  vertices: number;
   valid: boolean;
 }
 
@@ -53,6 +54,7 @@ export class Shape {
       center: m.center,
       faces: m.faces.length,
       edges: m.edges.length,
+      vertices: m.vertices.length,
       valid: m.valid,
     };
   }
@@ -85,14 +87,8 @@ export class Shape {
     return new ShapeList(this.meta().edges.map((e) => new Edge(this, e)));
   }
 
-  /**
-   * Not available yet: the kernel's interrogation output carries no vertex
-   * records (docs/occt-requirements.md R5). Will land with that kernel API.
-   */
-  vertices(): ShapeList<never> {
-    throw new Error(
-      "vertices() requires kernel support (occt.ts R5: describe() vertex records) — not available yet.",
-    );
+  vertices(): ShapeList<Vertex> {
+    return new ShapeList(this.meta().vertices.map((v) => new Vertex(this, v)));
   }
 
   /** See `Kernel.boolean` — cleaned by default (UnifySameDomain). */
@@ -122,12 +118,22 @@ export class Shape {
     );
   }
 
+  /** Mirror across a plane or about an axis (build123d `mirror()`). */
+  mirror(opts: {
+    plane?: { origin?: Vec3; normal: Vec3 };
+    axis?: { origin?: Vec3; direction: Vec3 };
+  }): Solid {
+    return record("mirror", { target: this.handle.id, ...opts }, () =>
+      solidFromKernel(getKernel().mirror(this.handle, opts)),
+    );
+  }
+
   fillet(edges: ShapeList<Edge> | readonly Edge[], radius: number): Solid {
     return fillet(this, edges, radius);
   }
 
-  chamfer(edges: ShapeList<Edge> | readonly Edge[], distance: number): Solid {
-    return chamfer(this, edges, distance);
+  chamfer(edges: ShapeList<Edge> | readonly Edge[], distance: number, length2?: number): Solid {
+    return chamfer(this, edges, distance, length2);
   }
 
   /** Export by file extension (.step/.stl/.glb). Node writes to disk. */
@@ -219,6 +225,26 @@ export class Edge {
   }
 }
 
+/** A vertex "view" over kernel metadata (a corner point). */
+export class Vertex {
+  constructor(
+    readonly parent: Shape,
+    readonly meta: VertexMeta,
+  ) {}
+
+  get index(): number {
+    return this.meta.index;
+  }
+
+  get center(): Vec3 {
+    return this.meta.position;
+  }
+
+  get position(): Vec3 {
+    return this.meta.position;
+  }
+}
+
 /* ----------------------------- ShapeList -------------------------------- */
 
 export type FilterBy<T> = Axis | PlaneT | string | ((item: T) => boolean);
@@ -230,10 +256,10 @@ export type FilterBy<T> = Axis | PlaneT | string | ((item: T) => boolean);
  *   parallel tangent; everything else drops out.
  * - `filterBy(Plane)`: faces parallel to the plane; circle/ellipse edges
  *   lying in the plane; line edges with center in plane and tangent ⊥ normal.
- * - `filterBy("cylinder" | "line" | ...)`: geometry-type equality.
+ * - `filterBy("cylinder" | "line" | ... | "vertex")`: geometry-type equality.
  * - `filterBy(fn)`: custom predicate.
  */
-export class ShapeList<T extends Face | Edge> implements Iterable<T> {
+export class ShapeList<T extends Face | Edge | Vertex> implements Iterable<T> {
   constructor(readonly items: readonly T[]) {}
 
   [Symbol.iterator](): Iterator<T> {
@@ -271,6 +297,9 @@ export class ShapeList<T extends Face | Edge> implements Iterable<T> {
             ? filter.isParallel(new Axis(item.meta.center, item.meta.normal))
             : false;
         }
+        if (item instanceof Vertex) {
+          return false; // a point has no direction
+        }
         return item.meta.curve === "line" && item.meta.direction !== undefined
           ? filter.isParallel(new Axis(item.meta.center, item.meta.direction))
           : false;
@@ -285,6 +314,9 @@ export class ShapeList<T extends Face | Edge> implements Iterable<T> {
             item.meta.normal !== undefined &&
             planeAxis.isParallel(new Axis(item.meta.center, item.meta.normal))
           );
+        }
+        if (item instanceof Vertex) {
+          return false; // build123d's plane filter applies to faces/edges only
         }
         const { center } = item.meta;
         const inPlane = Math.abs(v.dot(v.sub(center, plane.origin), planeAxis.direction)) <= 1e-7;
@@ -306,7 +338,11 @@ export class ShapeList<T extends Face | Edge> implements Iterable<T> {
       };
     } else if (typeof filter === "string") {
       predicate = (item) =>
-        item instanceof Face ? item.meta.surface === filter : item.meta.curve === filter;
+        item instanceof Face
+          ? item.meta.surface === filter
+          : item instanceof Edge
+            ? item.meta.curve === filter
+            : filter === "vertex";
     } else {
       predicate = filter;
     }
@@ -405,7 +441,7 @@ export class ShapeList<T extends Face | Edge> implements Iterable<T> {
       case "area":
         return (item) => (item instanceof Face ? item.area : badSortKey("area", item));
       case "radius":
-        return (item) => item.meta.radius ?? Number.NaN;
+        return (item) => (item instanceof Vertex ? Number.NaN : (item.meta.radius ?? Number.NaN));
       case "volume":
         return (item) => item.parent.meta().volume;
       default:
@@ -416,9 +452,11 @@ export class ShapeList<T extends Face | Edge> implements Iterable<T> {
 
 /* ------------------------- fillet/chamfer helpers ------------------------ */
 
-function badSortKey(key: string, item: Face | Edge): never {
+function badSortKey(key: string, item: Face | Edge | Vertex): never {
   throw new Error(
-    `sortBy("${key}") is not defined for ${item instanceof Face ? "faces" : "edges"}.`,
+    `sortBy("${key}") is not defined for ${
+      item instanceof Face ? "faces" : item instanceof Edge ? "edges" : "vertices"
+    }.`,
   );
 }
 
@@ -449,9 +487,21 @@ function fillet(s: Shape, edges: ShapeList<Edge> | readonly Edge[], radius: numb
   );
 }
 
-function chamfer(s: Shape, edges: ShapeList<Edge> | readonly Edge[], distance: number): Solid {
+function chamfer(
+  s: Shape,
+  edges: ShapeList<Edge> | readonly Edge[],
+  distance: number,
+  length2?: number,
+): Solid {
   const indices = resolveEdgeIndices(s, edges);
-  return record("chamfer", { target: s.handle.id, edges: indices, distance }, () =>
-    solidFromKernel(getKernel().chamfer(s.handle, distance, indices)),
+  return record(
+    "chamfer",
+    {
+      target: s.handle.id,
+      edges: indices,
+      distance,
+      ...(length2 !== undefined ? { length2 } : {}),
+    },
+    () => solidFromKernel(getKernel().chamfer(s.handle, distance, indices, length2)),
   );
 }

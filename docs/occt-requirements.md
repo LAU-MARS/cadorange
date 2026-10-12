@@ -160,11 +160,14 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 最严容差验证（10/10，面/边计数与 build123d 完全一致）**。未解决仅 R7/R8/R9
 （深度对标基建，M2+）。
 
-## 0.10.0 新能力待 cadorange 采纳（按里程碑吸收，勿一次性全上）
+## 新能力采纳进度（occt.ts 0.10.0 / 1.0.0）
 
-- **M0.5 即可接**：`vertices()`（describe 已带顶点，补 Vertex 视图 + 选择器）、
-  `mirror()`、不等距 `chamfer(distance, length2)`、`compound()`（多体）
-- **M1 直接可用**：`subShapes()`（一等子形状句柄——草图在面上构图的关键基建）、
-  `makeHelix`、B 样条曲面、`heal()`（ sloppy 导入修复）、`pipe`
-- **M1 阵列**：`circularPattern/rectangularPattern`（bolt circle / 筋板网格）
+- ✅ **M0.5 已采纳（cadorange 0.4.0）**：`vertices()`（Vertex 视图 + `#vertex`
+  选择器）、`mirror({plane|axis})`、不等距 `chamfer(distance, length2)`、
+  `compound()`（多体；注意 Compound.volume 语义差异见 api-map 差异表 #8）
+- **M1 待采纳**：`subShapes()`（一等子形状句柄——草图在面上构图的关键基建）、
+  `makeHelix`、B 样条曲面、`heal()`、`pipe`、`circularPattern/rectangularPattern`
+- **R7/R8/R9 已解锁（1.0.0 raw 层）**：`toRaw/fromRaw` 桥 + 152 个 OCCT 原始类
+  （TopExp/TopTools/ShapeUpgrade/BRepLib 等）——子形状身份（tag）、拓扑邻接、
+  边凹凸性可在 cadorange kernel 层自研，不再依赖内核封装排期。
 - 采纳时同步更新 docs/api-map.md 的状态与差异表。

@@ -1,0 +1,25 @@
+{
+  "name": "box_chamfer_asym",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 7759.999999999998,
+    "area": 2264.444102037119,
+    "bboxMin": [
+      0.0,
+      0.0,
+      -5.208142224328912e-32
+    ],
+    "bboxMax": [
+      20.0,
+      20.0,
+      20.0
+    ],
+    "faces": 10,
+    "edges": 24,
+    "vertices": 16,
+    "valid": true
+  }
+}

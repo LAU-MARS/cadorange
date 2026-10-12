@@ -1,0 +1,25 @@
+{
+  "name": "mirror_compound",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 3999.999999999999,
+    "area": 3199.9999999999995,
+    "bboxMin": [
+      -22.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      20.0,
+      20.0,
+      10.0
+    ],
+    "faces": 12,
+    "edges": 24,
+    "vertices": 16,
+    "valid": true
+  }
+}

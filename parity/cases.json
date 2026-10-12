@@ -3,73 +3,241 @@
   "cases": [
     {
       "name": "box",
-      "ops": [{ "op": "box", "id": "a", "dx": 80, "dy": 60, "dz": 10 }],
+      "ops": [
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 80,
+          "dy": 60,
+          "dz": 10
+        }
+      ],
       "result": "a"
     },
     {
       "name": "cylinder",
-      "ops": [{ "op": "cylinder", "id": "a", "radius": 5, "height": 20 }],
+      "ops": [
+        {
+          "op": "cylinder",
+          "id": "a",
+          "radius": 5,
+          "height": 20
+        }
+      ],
       "result": "a"
     },
     {
       "name": "sphere",
-      "ops": [{ "op": "sphere", "id": "a", "radius": 10 }],
+      "ops": [
+        {
+          "op": "sphere",
+          "id": "a",
+          "radius": 10
+        }
+      ],
       "result": "a"
     },
     {
       "name": "cone",
-      "ops": [{ "op": "cone", "id": "a", "radius1": 10, "radius2": 5, "height": 20 }],
+      "ops": [
+        {
+          "op": "cone",
+          "id": "a",
+          "radius1": 10,
+          "radius2": 5,
+          "height": 20
+        }
+      ],
       "result": "a"
     },
     {
       "name": "torus",
-      "ops": [{ "op": "torus", "id": "a", "radius1": 20, "radius2": 5 }],
+      "ops": [
+        {
+          "op": "torus",
+          "id": "a",
+          "radius1": 20,
+          "radius2": 5
+        }
+      ],
       "result": "a"
     },
     {
       "name": "plate_with_hole",
       "ops": [
-        { "op": "box", "id": "a", "dx": 80, "dy": 60, "dz": 10 },
-        { "op": "cylinder", "id": "b", "radius": 8, "height": 12, "origin": [40, 30, -1] },
-        { "op": "cut", "id": "c", "target": "a", "tool": "b" }
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 80,
+          "dy": 60,
+          "dz": 10
+        },
+        {
+          "op": "cylinder",
+          "id": "b",
+          "radius": 8,
+          "height": 12,
+          "origin": [40, 30, -1]
+        },
+        {
+          "op": "cut",
+          "id": "c",
+          "target": "a",
+          "tool": "b"
+        }
       ],
       "result": "c"
     },
     {
       "name": "plate_with_hole_fillet",
       "ops": [
-        { "op": "box", "id": "a", "dx": 80, "dy": 60, "dz": 10 },
-        { "op": "cylinder", "id": "b", "radius": 8, "height": 12, "origin": [40, 30, -1] },
-        { "op": "cut", "id": "c", "target": "a", "tool": "b" },
-        { "op": "filletZ", "id": "d", "target": "c", "radius": 3 }
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 80,
+          "dy": 60,
+          "dz": 10
+        },
+        {
+          "op": "cylinder",
+          "id": "b",
+          "radius": 8,
+          "height": 12,
+          "origin": [40, 30, -1]
+        },
+        {
+          "op": "cut",
+          "id": "c",
+          "target": "a",
+          "tool": "b"
+        },
+        {
+          "op": "filletZ",
+          "id": "d",
+          "target": "c",
+          "radius": 3
+        }
       ],
       "result": "d"
     },
     {
       "name": "box_chamfer",
       "ops": [
-        { "op": "box", "id": "a", "dx": 20, "dy": 20, "dz": 20 },
-        { "op": "chamferZ", "id": "b", "target": "a", "distance": 2 }
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 20,
+          "dy": 20,
+          "dz": 20
+        },
+        {
+          "op": "chamferZ",
+          "id": "b",
+          "target": "a",
+          "distance": 2
+        }
       ],
       "result": "b"
     },
     {
       "name": "fuse_boxes",
       "ops": [
-        { "op": "box", "id": "a", "dx": 10, "dy": 10, "dz": 10 },
-        { "op": "box", "id": "b", "dx": 10, "dy": 10, "dz": 10, "origin": [5, 0, 0] },
-        { "op": "fuse", "id": "c", "target": "a", "tool": "b" }
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 10,
+          "dy": 10,
+          "dz": 10
+        },
+        {
+          "op": "box",
+          "id": "b",
+          "dx": 10,
+          "dy": 10,
+          "dz": 10,
+          "origin": [5, 0, 0]
+        },
+        {
+          "op": "fuse",
+          "id": "c",
+          "target": "a",
+          "tool": "b"
+        }
       ],
       "result": "c"
     },
     {
       "name": "common_boxes",
       "ops": [
-        { "op": "box", "id": "a", "dx": 10, "dy": 10, "dz": 10 },
-        { "op": "box", "id": "b", "dx": 10, "dy": 10, "dz": 10, "origin": [5, 0, 0] },
-        { "op": "common", "id": "c", "target": "a", "tool": "b" }
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 10,
+          "dy": 10,
+          "dz": 10
+        },
+        {
+          "op": "box",
+          "id": "b",
+          "dx": 10,
+          "dy": 10,
+          "dz": 10,
+          "origin": [5, 0, 0]
+        },
+        {
+          "op": "common",
+          "id": "c",
+          "target": "a",
+          "tool": "b"
+        }
       ],
       "result": "c"
+    },
+    {
+      "name": "mirror_compound",
+      "ops": [
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 20,
+          "dy": 20,
+          "dz": 10
+        },
+        {
+          "op": "mirror",
+          "id": "m",
+          "target": "a",
+          "plane": [-1, 0, 0, 1, 0, 0]
+        },
+        {
+          "op": "compound",
+          "id": "c",
+          "parts": ["a", "m"]
+        }
+      ],
+      "result": "c",
+      "volumeTolerance": 4000,
+      "$note": "build123d Compound.volume reports one child only (its own quirk); cadorange sums children (physically correct) \u2014 see docs/api-map.md differences"
+    },
+    {
+      "name": "box_chamfer_asym",
+      "ops": [
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 20,
+          "dy": 20,
+          "dz": 20
+        },
+        {
+          "op": "chamferZ",
+          "id": "b",
+          "target": "a",
+          "distance": 2,
+          "length2": 3
+        }
+      ],
+      "result": "b"
     }
   ]
 }

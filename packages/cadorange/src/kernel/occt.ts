@@ -181,8 +181,13 @@ class OcctKernel implements Kernel {
     return this.#adopt(this.#occ.fillet(this.#raw(s), radius, opts));
   }
 
-  chamfer(s: ShapeHandle, distance: number, edgeIndices: number[]): ShapeHandle {
-    const opts = edgeIndices.length > 0 ? { edges: edgeIndices } : undefined;
+  chamfer(s: ShapeHandle, distance: number, edgeIndices: number[], length2?: number): ShapeHandle {
+    const opts =
+      edgeIndices.length > 0
+        ? { edges: edgeIndices, ...(length2 !== undefined ? { length2 } : {}) }
+        : length2 !== undefined
+          ? { length2 }
+          : undefined;
     return this.#adopt(this.#occ.chamfer(this.#raw(s), distance, opts));
   }
 
@@ -192,6 +197,21 @@ class OcctKernel implements Kernel {
 
   rotate(s: ShapeHandle, axisDir: Vec3, angleDegrees: number): ShapeHandle {
     return this.#adopt(this.#occ.rotate(this.#raw(s), axisDir, angleDegrees));
+  }
+
+  mirror(
+    s: ShapeHandle,
+    opts: {
+      plane?: { origin?: Vec3; normal: Vec3 };
+      axis?: { origin?: Vec3; direction: Vec3 };
+    },
+  ): ShapeHandle {
+    return this.#adopt(this.#occ.mirror(this.#raw(s), opts));
+  }
+
+  compound(shapes: readonly ShapeHandle[]): ShapeHandle {
+    const raws = shapes.map((h) => this.#raw(h));
+    return this.#adopt(this.#occ.compound(raws));
   }
 
   meta(s: ShapeHandle): ShapeMeta {
@@ -282,6 +302,7 @@ class OcctKernel implements Kernel {
       valid: raw.isValid(),
       faces,
       edges,
+      vertices: d.vertices,
       holes: d.holes,
     };
     this.#metaCache.set(s, meta);
