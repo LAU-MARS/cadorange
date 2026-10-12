@@ -82,6 +82,8 @@ def metrics(part) -> dict:
         "faces": len(part.faces()),
         "edges": len(part.edges()),
         "vertices": len(part.vertices()),
+        "concaveEdges": len(part.edges().filter_by(bd.Convexity.CONCAVE)),
+        "convexEdges": len(part.edges().filter_by(bd.Convexity.CONVEX)),
         "valid": part.is_valid,
     }
 

@@ -51,12 +51,23 @@ export interface EdgeMeta {
    * build123d selector semantics). Others: integral centroid.
    */
   readonly center: Vec3;
+  /** Circle only — the arc's mid-point ON the curve (unlike `center`, the
+   *  circle origin). Probing/anchoring must use this, not `center`. */
+  readonly arcPoint?: Vec3;
+  /** Circle only — parameter range in radians. */
+  readonly uRange?: readonly [number, number];
   /** Line only — unit direction (start → end). */
   readonly direction?: Vec3;
   /** Circle/ellipse — unit axis. */
   readonly axis?: Vec3;
   /** Circle only. */
   readonly radius?: number;
+  /**
+   * Dihedral classification vs the solid (build123d `Convexity`): convex,
+   * concave, or smooth (tangent blend). Undefined for seam/free edges and
+   * when the adjacent faces are not analytically classifiable.
+   */
+  readonly convexity?: "convex" | "concave" | "smooth";
 }
 
 /** A through-cylindrical-feature heuristic hit (bore/hole/boss). */
@@ -140,6 +151,7 @@ export interface Kernel {
   /** One interrogation call; implementations cache per handle. */
   meta(s: ShapeHandle): ShapeMeta;
   isValid(s: ShapeHandle): boolean;
+  classifyPoint(s: ShapeHandle, point: Vec3): "in" | "out" | "on" | "unknown";
 
   exportStep(s: ShapeHandle): Uint8Array;
   /** Ascii STL. */

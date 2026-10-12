@@ -1,0 +1,27 @@
+{
+  "name": "l_bracket",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 31999.999999999996,
+    "area": 7200.0,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      60.0,
+      20.0,
+      40.0
+    ],
+    "faces": 8,
+    "edges": 18,
+    "vertices": 12,
+    "concaveEdges": 1,
+    "convexEdges": 17,
+    "valid": true
+  }
+}

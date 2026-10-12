@@ -238,6 +238,33 @@
         }
       ],
       "result": "b"
+    },
+    {
+      "name": "l_bracket",
+      "ops": [
+        {
+          "op": "box",
+          "id": "a",
+          "dx": 20,
+          "dy": 20,
+          "dz": 40
+        },
+        {
+          "op": "box",
+          "id": "b",
+          "dx": 40,
+          "dy": 20,
+          "dz": 20,
+          "origin": [20, 0, 0]
+        },
+        {
+          "op": "fuse",
+          "id": "c",
+          "target": "a",
+          "tool": "b"
+        }
+      ],
+      "result": "c"
     }
   ]
 }

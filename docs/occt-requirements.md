@@ -130,18 +130,18 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **说明**：这是与 build123d 拉齐"对象身份"语义的长期基建，M2 前不阻塞；
   M0/M1 采用"边必须属于被操作的 shape"约束 + op 后全量重新 describe。
 
-### R8 拓扑邻接查询
+### R8 拓扑邻接查询 ✅ 已解决(cadorange kernel 层自研,0.5.0)
 
-- **理由**：`edgeFaces(edge)` / `faceEdges(face)` 邻接关系支撑高级选择器
-  （build123d 的邻接类选择）与诊断信息。
-- **建议**：随 R2 的 subShapes 一起在 interrogate 层加邻接表输出。
+- 高层 `subShapes` 顺序与 describe 索引对齐 + raw `TopoDS_Shape.isSame` 匹配,
+  kernel 层直接构建 edge→faces 邻接(见 `#classifyEdges`),无需内核 interrogate 封装。
 
-### R9 边/面凹凸性（Convexity）
+### R9 边/面凹凸性（Convexity）✅ 已解决(cadorange kernel 层自研,0.5.0)
 
-- **理由**：build123d `filterBy(Convexity)` 用于选凹/凸边（倒角通常只打凸边，
-  检测凹边找配合面）。`describe()` 目前无凹凸信息。
-- **建议**：interrogate 层为 edge 增加二面角/凹凸分类（相邻两面的法向关系，
-  依赖 R8 的邻接表；曲面情形可用局部采样近似）。
+- 实现不走解析法向(朝向不可靠、面型受限),而是**探针环 + 二分楔角**:绕边
+  (circle 边锚定在弧上中点 arcPoint)做 16 向 `classifyPoint` 探针,对 in/out
+  转变二分到亚度精度,材料楔角 <180° 凸 / >180° 凹 / ≈180°(±5°) smooth。
+  朝向无关、面型无关(cone/torus 通用)。parity L 型用例凹/凸计数与 build123d
+  一致(1/17);全边 fillet 后 23 条切线边全部 smooth。
 
 ## 已验证可用的能力（2026-10-10，occt.ts 0.10.0 + OCCT 7.9.x，Node 端实测）
 

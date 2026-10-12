@@ -1,5 +1,5 @@
 import { type MeshData, meshToAsciiStl, type OccSession, type OccShape } from "occt.ts";
-import type { Vec3 } from "../geom";
+import { type Vec3, v } from "../geom";
 import type {
   CurveKind,
   EdgeMeta,
@@ -238,11 +238,22 @@ class OcctKernel implements Kernel {
         // axisPoint (the underlying circle's center), NOT the integral
         // centroid — arc centroids would drift off-center and break
         // selection semantics (occt.ts ≥0.10.0 reports both).
+        // arcPoint: a point ON the arc at the mid parameter, for probing.
+        const helper: Vec3 = Math.abs(e.axis[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+        const b1 = v.normalize(v.cross(e.axis, helper));
+        const b2 = v.cross(e.axis, b1);
+        const uMid = (e.uRange[0] + e.uRange[1]) / 2;
+        const arcPoint: Vec3 = v.add(
+          e.axisPoint,
+          v.add(v.scale(b1, e.radius * Math.cos(uMid)), v.scale(b2, e.radius * Math.sin(uMid))),
+        );
         return {
           index: e.index,
           curve,
           length: e.length,
           center: e.axisPoint,
+          arcPoint,
+          uRange: e.uRange,
           axis: e.axis,
           radius: e.radius,
         };
@@ -293,6 +304,13 @@ class OcctKernel implements Kernel {
       return { index: f.index, surface, area: f.area, center: f.center };
     });
 
+    const diagonal = Math.hypot(
+      bbox.max[0] - bbox.min[0],
+      bbox.max[1] - bbox.min[1],
+      bbox.max[2] - bbox.min[2],
+    );
+    const classified = this.#classifyEdges(raw, faces, edges, 1e-4 * diagonal);
+
     const meta: ShapeMeta = {
       shapeType: raw.shapeType(),
       volume: raw.volume(),
@@ -301,7 +319,7 @@ class OcctKernel implements Kernel {
       center: raw.centroid(),
       valid: raw.isValid(),
       faces,
-      edges,
+      edges: classified,
       vertices: d.vertices,
       holes: d.holes,
     };
@@ -309,8 +327,194 @@ class OcctKernel implements Kernel {
     return meta;
   }
 
+  /**
+   * Dihedral classification per edge (build123d `Convexity`), by probing:
+   * around each edge midpoint, 16 point-classification probes in the plane
+   * perpendicular to the edge count the material wedge angle — under 180°
+   * the edge is convex (a ridge), over 180° concave (a valley), at 180° the
+   * faces are tangent (a smooth blend). Orientation-free and surface-type
+   * free: works for cone/torus faces too, no analytic normals needed.
+   * Seam/free edges (adjacent-face count != 2) stay unclassified.
+   */
+  #classifyEdges(raw: OccShape, faces: FaceMeta[], edges: EdgeMeta[], epsilon: number): EdgeMeta[] {
+    if (faces.length === 0 || edges.length === 0 || epsilon <= 0) {
+      return edges;
+    }
+    const faceShapes = this.#occ.subShapes(raw, "Face");
+    const edgeShapes = this.#occ.subShapes(raw, "Edge");
+    const edgeFaces: number[][] = edges.map(() => []);
+    try {
+      for (let j = 0; j < faceShapes.length && j < faces.length; j++) {
+        const faceShape = faceShapes[j];
+        if (!faceShape) {
+          continue;
+        }
+        const own = this.#occ.subShapes(faceShape, "Edge");
+        try {
+          for (const es of own) {
+            const i = edgeShapes.findIndex((g) => g !== undefined && es && g.raw.isSame(es.raw));
+            if (i >= 0 && !(edgeFaces[i] ?? []).includes(j)) {
+              edgeFaces[i]?.push(j);
+            }
+          }
+        } finally {
+          for (const es of own) {
+            es.dispose();
+          }
+        }
+      }
+    } finally {
+      for (const f of faceShapes) {
+        f?.dispose();
+      }
+      for (const e of edgeShapes) {
+        e?.dispose();
+      }
+    }
+
+    return edges.map((edge, i) => {
+      if ((edgeFaces[i] ?? []).length !== 2) {
+        return edge; // seam (same face twice), free edge
+      }
+      const tangent = this.#edgeTangent(edge);
+      if (!tangent) {
+        return edge;
+      }
+      const anchor = edge.arcPoint ?? edge.center;
+      // orthonormal basis perpendicular to the edge
+      const helper: Vec3 = Math.abs(tangent[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+      const u = v.normalize(v.cross(tangent, helper));
+      const w = v.cross(tangent, u);
+      const clsAt = (angle: number): "in" | "out" | "on" => {
+        const cls = this.#occ.classifyPoint(
+          raw,
+          v.add(
+            anchor,
+            v.scale(v.add(v.scale(u, Math.cos(angle)), v.scale(w, Math.sin(angle))), epsilon),
+          ),
+        );
+        return cls as "in" | "out" | "on";
+      };
+      const coarse: Array<"in" | "out" | "on"> = [];
+      let decisive = 0;
+      for (let k = 0; k < 16; k++) {
+        const cls = clsAt((k * Math.PI) / 8);
+        coarse.push(cls);
+        if (cls !== "on") {
+          decisive++;
+        }
+      }
+      if (decisive < 8) {
+        return edge; // too many ambiguous probes — stay unclassified
+      }
+      const wedge = this.#materialWedge(coarse, clsAt);
+      if (wedge === undefined) {
+        return edge;
+      }
+      // wedge is the material angle in radians; smooth = tangent faces (~π)
+      const SMOOTH_TOL = Math.PI / 36; // 5°
+      if (wedge < Math.PI - SMOOTH_TOL) {
+        return { ...edge, convexity: "convex" };
+      }
+      if (wedge > Math.PI + SMOOTH_TOL) {
+        return { ...edge, convexity: "concave" };
+      }
+      return { ...edge, convexity: "smooth" };
+    });
+  }
+
+  /**
+   * Material wedge angle around the edge, by bisecting the coarse probe
+   * ring's in/out transitions to sub-degree precision (a 16-probe count
+   * alone misclassifies 180° tangent-blend edges by phase luck).
+   */
+  #materialWedge(
+    coarse: Array<"in" | "out" | "on">,
+    clsAt: (angle: number) => "in" | "out" | "on",
+  ): number | undefined {
+    const bisect = (a: number, b: number): number => {
+      const startCls = clsAt(a);
+      let lo = a;
+      let hi = b;
+      for (let i = 0; i < 5; i++) {
+        const mid = (lo + hi) / 2;
+        const cls = clsAt(mid);
+        if (cls === "on") {
+          return mid; // on the boundary already
+        }
+        if (cls === startCls) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+      return (lo + hi) / 2;
+    };
+    // dissolve on-probes into their nearest decisive neighbor so the ring is
+    // a pure in/out cycle (on-probes sit exactly on face planes)
+    const ring: Array<"in" | "out"> = coarse.map((c, k) => {
+      if (c !== "on") {
+        return c;
+      }
+      for (let d = 1; d < 16; d++) {
+        const prev = coarse[(k - d + 16) % 16] ?? "on";
+        const next = coarse[(k + d) % 16] ?? "on";
+        if (prev !== "on" && prev === next) {
+          return prev;
+        }
+        if (prev !== "on") {
+          return prev;
+        }
+        if (next !== "on") {
+          return next;
+        }
+      }
+      return "in" as const;
+    });
+    const boundaries: number[] = [];
+    for (let k = 0; k < 16; k++) {
+      if (ring[k] !== ring[(k + 1) % 16]) {
+        boundaries.push(bisect((k * Math.PI) / 8, ((k + 1) * Math.PI) / 8));
+      }
+    }
+    if (boundaries.length !== 2) {
+      return undefined;
+    }
+    const first = boundaries[0] ?? 0;
+    const second = boundaries[1] ?? 0;
+    const [b1, b2] = first < second ? [first, second] : [second, first];
+    // material is the arc that contains a known "in" probe
+    const firstIn = ring.findIndex((c) => c === "in");
+    if (firstIn < 0) {
+      return undefined;
+    }
+    const inAngle = (firstIn * Math.PI) / 8;
+    const between = inAngle > b1 && inAngle < b2;
+    return between ? b2 - b1 : 2 * Math.PI - (b2 - b1);
+  }
+
+  /** Unit tangent at the probe anchor (line: direction; circle: axis x radial). */
+  #edgeTangent(edge: EdgeMeta): Vec3 | undefined {
+    if (edge.curve === "line" && edge.direction) {
+      return edge.direction;
+    }
+    if (edge.curve === "circle" && edge.axis && edge.arcPoint) {
+      const radial = v.sub(edge.arcPoint, edge.center);
+      const len = v.length(radial);
+      if (len < 1e-9) {
+        return undefined;
+      }
+      return v.normalize(v.cross(edge.axis, v.scale(radial, 1 / len)));
+    }
+    return undefined;
+  }
+
   isValid(s: ShapeHandle): boolean {
     return this.#raw(s).isValid();
+  }
+
+  classifyPoint(s: ShapeHandle, point: Vec3): "in" | "out" | "on" | "unknown" {
+    return this.#occ.classifyPoint(this.#raw(s), point);
   }
 
   exportStep(s: ShapeHandle): Uint8Array {

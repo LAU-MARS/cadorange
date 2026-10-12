@@ -1,5 +1,17 @@
 # cadorange
 
+## 0.5.0
+
+### Minor Changes
+
+- Edge convexity classification — the last build123d selector semantic (`filterBy(Convexity)`).
+  
+  - `Edge.convexity` and `filterBy("convex" | "concave" | "smooth")` — the classic "chamfer only convex edges, find concave edges for mating" workflow
+  - Implementation is orientation-free and surface-type-free: a 16-direction point-classification probe ring around each edge (anchored on the arc mid-point for circle edges), with in/out transitions bisected to sub-degree precision — the material wedge angle decides convex (<180°), concave (>180°) or smooth (~180°, tangent blends)
+  - Edge adjacency (edge → adjacent faces) built in the kernel layer via subShapes order alignment + `isSame` matching — seam/free edges stay unclassified
+  - Circle edges now carry `arcPoint` (a point on the arc) and `uRange` metadata
+  - Parity: L-bracket case matches build123d exactly (1 concave / 17 convex edges); all-fillet box yields 23 smooth tangent edges
+
 ## 0.4.0
 
 ### Minor Changes

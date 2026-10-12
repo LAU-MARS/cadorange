@@ -78,7 +78,7 @@
 | `filterBy(Axis)` | 平面面法向 ∥ 轴；线边切向 ∥ 轴；其余排除 | `PlaneFaceInfo.normal` / `LineEdgeInfo.direction` |
 | `filterBy(Plane)` | 面 ∥ 平面；边/线在该平面内 | normal + 原点距离；circle: center·axis |
 | `filterBy(GeomType)` | 几何类型相等 | `curve` / `surface` 字面量 |
-| `filterBy(Convexity)` | 凹/凸分类 | ⚠️ describe() 缺——已列入 occt.ts 需求 R8 |
+| `filterBy(Convexity)` | 凹/凸分类 | ✅ `filterBy("convex"/"concave"/"smooth")`(0.5.0,探针环自研) |
 | `filterBy((o) => bool)` | 自定义谓词 | 直接支持 |
 | `filterByPosition(axis, min, max, inclusive)` | 中心投影过滤+排序 | `origin/center` 投影 |
 | `groupBy(key)` / `sortBy(key, reverse)` | 分组/排序 | `length/radius/area/center` |

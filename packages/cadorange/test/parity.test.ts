@@ -60,6 +60,8 @@ interface Golden {
     faces: number;
     edges: number;
     vertices: number;
+    concaveEdges?: number;
+    convexEdges?: number;
     valid: boolean;
   };
 }
@@ -187,6 +189,12 @@ describe("parity vs build123d", () => {
       expect(Math.abs(d.faces - m.faces)).toBeLessThanOrEqual(c.facesTolerance ?? 0);
       expect(Math.abs(d.edges - m.edges)).toBeLessThanOrEqual(c.edgesTolerance ?? 0);
       expect(Math.abs(d.vertices - m.vertices)).toBeLessThanOrEqual(c.verticesTolerance ?? 0);
+      if (m.concaveEdges !== undefined) {
+        expect(part.edges().filterBy("concave").count()).toBe(m.concaveEdges);
+      }
+      if (m.convexEdges !== undefined) {
+        expect(part.edges().filterBy("convex").count()).toBe(m.convexEdges);
+      }
       expect(d.valid).toBe(m.valid);
     });
   }

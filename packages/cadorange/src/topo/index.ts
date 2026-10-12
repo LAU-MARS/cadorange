@@ -223,6 +223,11 @@ export class Edge {
   get radius(): number | undefined {
     return this.meta.radius;
   }
+
+  /** Dihedral classification vs the solid (build123d `Convexity`). */
+  get convexity(): "convex" | "concave" | "smooth" | undefined {
+    return this.meta.convexity;
+  }
 }
 
 /** A vertex "view" over kernel metadata (a corner point). */
@@ -257,6 +262,8 @@ export type FilterBy<T> = Axis | PlaneT | string | ((item: T) => boolean);
  * - `filterBy(Plane)`: faces parallel to the plane; circle/ellipse edges
  *   lying in the plane; line edges with center in plane and tangent ⊥ normal.
  * - `filterBy("cylinder" | "line" | ... | "vertex")`: geometry-type equality.
+ * - `filterBy("convex" | "concave" | "smooth")`: edge dihedral classification
+ *   (build123d `filterBy(Convexity)`).
  * - `filterBy(fn)`: custom predicate.
  */
 export class ShapeList<T extends Face | Edge | Vertex> implements Iterable<T> {
@@ -337,12 +344,16 @@ export class ShapeList<T extends Face | Edge | Vertex> implements Iterable<T> {
         return false;
       };
     } else if (typeof filter === "string") {
-      predicate = (item) =>
-        item instanceof Face
-          ? item.meta.surface === filter
-          : item instanceof Edge
-            ? item.meta.curve === filter
-            : filter === "vertex";
+      if (filter === "convex" || filter === "concave" || filter === "smooth") {
+        predicate = (item) => item instanceof Edge && item.meta.convexity === filter;
+      } else {
+        predicate = (item) =>
+          item instanceof Face
+            ? item.meta.surface === filter
+            : item instanceof Edge
+              ? item.meta.curve === filter
+              : filter === "vertex";
+      }
     } else {
       predicate = filter;
     }

@@ -10,6 +10,7 @@ import {
   compound,
   exportStep,
   exportStl,
+  fillet,
   importStep,
   init,
   intersect,
@@ -219,5 +220,29 @@ describe("M0.5 alignment (vertices, mirror, asymmetric chamfer, compound)", () =
     const c = chamfer(box, box.edges().filterBy(Axis.Z), 2, 3);
     // 4 wedges: (d * l2 / 2) * height
     expect(c.volume()).toBeCloseTo(8000 - 4 * 3 * 20, 4);
+  });
+});
+
+describe("edge convexity (build123d Convexity semantics)", () => {
+  it("box edges are all convex", () => {
+    const box = Box(20, 20, 20);
+    expect(box.edges().filterBy("convex").count()).toBe(12);
+    expect(box.edges().filterBy("concave").count()).toBe(0);
+  });
+
+  it("L-bracket has exactly one concave edge (the inner corner)", () => {
+    const l = Box(20, 20, 40).fuse(Box(40, 20, 20, { origin: [20, 0, 0] }));
+    const concave = l.edges().filterBy("concave");
+    expect(concave.count()).toBe(1);
+    // the concave edge runs vertically at the inner corner (x=20, z=20)
+    const e = concave.single("concave edge");
+    expect(Math.round(e.center[0])).toBe(20);
+    expect(Math.round(e.center[2])).toBe(20);
+    expect(l.edges().filterBy("convex").count()).toBeGreaterThan(0);
+  });
+
+  it("fillet produces smooth edges", () => {
+    const r = fillet(Box(20, 20, 20), [], 3); // all edges
+    expect(r.edges().filterBy("smooth").count()).toBeGreaterThan(0);
   });
 });
