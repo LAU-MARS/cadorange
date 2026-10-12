@@ -160,12 +160,22 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 最严容差验证（10/10，面/边计数与 build123d 完全一致）**。未解决仅 R7/R8/R9
 （深度对标基建，M2+）。
 
+### R14 2D 草图偏置（P1，2026-10-12 新增）
+
+- **理由**：build123d 草图流的核心操作 `offset(plan, -t)`（lego 类示例的
+  壁厚构造）。目前 occt.ts 只有 `offsetSolid`（3D）；cadorange 的 2D 布尔
+  靠 face 组合，缺 2D 等距。
+- **建议**：`offsetWire(wire, distance): OccShape`（BRepOffsetAPI_MakeOffset
+  对 wire），或确认 face 上的 `offsetSolid` 语义可复用。
+- **临时方案**：转译用矩形差/和重写（形状不保圆角，lego 示例暂缓）。
+
 ## 新能力采纳进度（occt.ts 0.10.0 / 1.0.0）
 
 - ✅ **M0.5 已采纳（cadorange 0.4.0）**：`vertices()`（Vertex 视图 + `#vertex`
   选择器）、`mirror({plane|axis})`、不等距 `chamfer(distance, length2)`、
   `compound()`（多体；注意 Compound.volume 语义差异见 api-map 差异表 #8）
-- **M1 待采纳**：`subShapes()`（一等子形状句柄——草图在面上构图的关键基建）、
+- **0.6.0 已采纳（M0.5 草图链路）**：`makeCircle/makePolygon/makeLine/makeArc/makeWire/makeFace/extrude/revolve` 全桥接；面上构图用 `Face.outerNormal()`（describe 法向无朝向，探针校准——见 api-map 差异表）
+- **M1 待采纳**：`makeHelix`、B 样条曲面、`heal()`、`pipe`、`circularPattern/rectangularPattern`、
   `makeHelix`、B 样条曲面、`heal()`、`pipe`、`circularPattern/rectangularPattern`
 - **R7/R8/R9 已解锁（1.0.0 raw 层）**：`toRaw/fromRaw` 桥 + 152 个 OCCT 原始类
   （TopExp/TopTools/ShapeUpgrade/BRepLib 等）——子形状身份（tag）、拓扑邻接、

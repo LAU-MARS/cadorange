@@ -1,0 +1,27 @@
+{
+  "name": "slot_extrude",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 176.54866776461625,
+    "area": 254.24777960769381,
+    "bboxMin": [
+      -8.0,
+      -3.0,
+      0.0
+    ],
+    "bboxMax": [
+      8.0,
+      3.0,
+      2.0
+    ],
+    "faces": 6,
+    "edges": 12,
+    "vertices": 8,
+    "concaveEdges": 0,
+    "convexEdges": 8,
+    "valid": true
+  }
+}

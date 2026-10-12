@@ -1,0 +1,27 @@
+{
+  "name": "tube_revolve",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 201.06192982974676,
+    "area": 301.59289474462014,
+    "bboxMin": [
+      -5.0,
+      -5.0,
+      -2.0
+    ],
+    "bboxMax": [
+      5.0,
+      5.0,
+      2.0
+    ],
+    "faces": 4,
+    "edges": 6,
+    "vertices": 4,
+    "concaveEdges": 0,
+    "convexEdges": 4,
+    "valid": true
+  }
+}

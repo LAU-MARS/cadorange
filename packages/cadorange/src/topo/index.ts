@@ -153,6 +153,23 @@ export function solidFromKernel(handle: ShapeHandle): Solid {
   return new Solid(handle);
 }
 
+/**
+ * A wire (open or closed profile). Sketch primitives record the plane a wire
+ * was drawn on, so `extrude` knows which way is "up" without asking.
+ */
+export class Wire extends Shape {
+  constructor(
+    handle: ShapeHandle,
+    readonly plane?: PlaneT,
+  ) {
+    super(handle);
+  }
+}
+
+export function wireFromKernel(handle: ShapeHandle, plane?: PlaneT): Wire {
+  return new Wire(handle, plane);
+}
+
 /** A face "view": kernel metadata plus the parent it was selected from. */
 export class Face {
   constructor(
@@ -186,6 +203,32 @@ export class Face {
 
   get radius(): number | undefined {
     return this.meta.radius;
+  }
+
+  #outerNormal?: Vec3;
+
+  /**
+   * The face's OUTWARD normal. `normal` is the kernel's unoriented
+   * geometric normal (either side) — this calibrates the direction against
+   * the solid with a point-classification probe and caches it. Everything
+   * that grows geometry off a face (sketch-on-face, workplanes, extrude
+   * direction) must use this, not `normal`.
+   */
+  outerNormal(): Vec3 {
+    if (this.#outerNormal) {
+      return this.#outerNormal;
+    }
+    const n: Vec3 = this.normal ?? [0, 0, 1];
+    const bbox = this.parent.meta().bbox;
+    const eps =
+      1e-3 *
+      Math.hypot(bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2]);
+    const probe = getKernel().classifyPoint(
+      this.parent.handle,
+      v.add(this.center, v.scale(n, eps)),
+    );
+    this.#outerNormal = probe === "in" ? (v.scale(n, -1) as Vec3) : n;
+    return this.#outerNormal;
   }
 }
 
@@ -224,9 +267,12 @@ export class Edge {
     return this.meta.radius;
   }
 
-  /** Dihedral classification vs the solid (build123d `Convexity`). */
+  /**
+   * Dihedral classification vs the solid (build123d `Convexity`) — computed
+   * lazily (probe rings are expensive) and cached per shape by the kernel.
+   */
   get convexity(): "convex" | "concave" | "smooth" | undefined {
-    return this.meta.convexity;
+    return getKernel().edgeConvexities(this.parent.handle).get(this.index);
   }
 }
 
@@ -345,7 +391,7 @@ export class ShapeList<T extends Face | Edge | Vertex> implements Iterable<T> {
       };
     } else if (typeof filter === "string") {
       if (filter === "convex" || filter === "concave" || filter === "smooth") {
-        predicate = (item) => item instanceof Edge && item.meta.convexity === filter;
+        predicate = (item) => item instanceof Edge && item.convexity === filter;
       } else {
         predicate = (item) =>
           item instanceof Face

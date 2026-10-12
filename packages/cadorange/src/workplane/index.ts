@@ -132,7 +132,7 @@ export class Workplane {
         'Workplane.workplane: select exactly one planar face first, e.g. .faces(">Z").',
       );
     }
-    this.#plane = planeFrom(face.center, face.normal);
+    this.#plane = planeFrom(face.center, face.outerNormal());
     return this;
   }
 

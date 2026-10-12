@@ -3,11 +3,11 @@
  * the shared `record()` entry (docs/architecture.md §3.3).
  */
 
+import { Axis, type Vec3, v } from "../geom";
 import { getKernel } from "../kernel/occt";
 import { record } from "../record";
-import type { Edge, Shape, ShapeList, Solid } from "../topo";
-import { solidFromKernel } from "../topo";
-import { todo } from "../util";
+import type { Edge, Shape, ShapeList } from "../topo";
+import { type Solid, solidFromKernel, Wire } from "../topo";
 
 export type BooleanOp = "fuse" | "cut" | "common";
 
@@ -69,12 +69,29 @@ export function compound(shapes: readonly Shape[]): Solid {
   );
 }
 
-/** M1: extrude a 2D sketch into a solid. */
-export function extrude(_sketch: unknown, _height: number): Solid {
-  todo("extrude");
+/**
+ * Extrudes a planar profile (wire or face) by `amount` along its plane normal
+ * (wires remember their sketch plane; override with `dir`).
+ */
+export function extrude(profile: Shape | Wire, amount: number, opts?: { dir?: Vec3 }): Solid {
+  const dir =
+    opts?.dir ??
+    (profile instanceof Wire ? profile.plane?.normal : undefined) ??
+    ([0, 0, 1] as Vec3);
+  return record("extrude", { amount, dir }, () =>
+    solidFromKernel(getKernel().extrude(profile.handle, v.scale(dir, amount))),
+  );
 }
 
-/** M1: revolve a 2D sketch around an axis. */
-export function revolve(_sketch: unknown, _axis: unknown, _angle?: number): Solid {
-  todo("revolve");
+/** Revolves a planar profile around `axis` by `angleDegrees` (default 360). */
+export function revolve(
+  profile: Shape | Wire,
+  axis: Axis | { origin?: Vec3; direction: Vec3 },
+  angleDegrees = 360,
+): Solid {
+  const origin = axis instanceof Axis ? axis.origin : (axis.origin ?? [0, 0, 0]);
+  const direction = axis instanceof Axis ? axis.direction : axis.direction;
+  return record("revolve", { angleDegrees }, () =>
+    solidFromKernel(getKernel().revolve(profile.handle, origin, direction, angleDegrees)),
+  );
 }

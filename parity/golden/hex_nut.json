@@ -1,0 +1,27 @@
+{
+  "name": "hex_nut",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 545.9820717101109,
+    "area": 583.9089395164688,
+    "bboxMin": [
+      -7.6000000000000005,
+      -6.928203230275509,
+      -1.972250303422617e-33
+    ],
+    "bboxMax": [
+      7.6,
+      6.92820323027551,
+      5.0
+    ],
+    "faces": 15,
+    "edges": 39,
+    "vertices": 26,
+    "concaveEdges": 0,
+    "convexEdges": 38,
+    "valid": true
+  }
+}

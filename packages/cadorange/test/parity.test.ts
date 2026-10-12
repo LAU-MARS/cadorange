@@ -19,9 +19,15 @@ import {
   Cylinder,
   chamfer,
   compound,
+  extrude,
+  faceOf,
   fillet,
   init,
   mirror,
+  Rectangle,
+  RegularPolygon,
+  revolve,
+  SlotCenterToCenter,
   Sphere,
   Torus,
 } from "../src/index";
@@ -122,6 +128,54 @@ function runCase(c: Case): Solid {
             o.length2 as number | undefined,
           ),
         );
+        break;
+      }
+      case "polygonR": {
+        shapes.set(o.id, RegularPolygon(o.radius as number, o.sides as number));
+        break;
+      }
+      case "sketchSlot": {
+        shapes.set(o.id, SlotCenterToCenter(o.length as number, o.diameter as number));
+        break;
+      }
+      case "rectOnXZ": {
+        const [u, vv] = (o.at as [number, number] | undefined) ?? [0, 0];
+        shapes.set(
+          o.id,
+          Rectangle(o.width as number, o.height as number, {
+            on: { origin: [0, 0, 0], normal: [0, -1, 0], xDir: [1, 0, 0] },
+            at: [u, vv],
+          }),
+        );
+        break;
+      }
+      case "extrudeSketch": {
+        shapes.set(o.id, extrude(shapes.get(o.target as string) as Solid, o.amount as number));
+        break;
+      }
+      case "revolveSketch": {
+        shapes.set(
+          o.id,
+          revolve(
+            shapes.get(o.target as string) as Solid,
+            Axis.Z,
+            (o.angle as number | undefined) ?? 360,
+          ),
+        );
+        break;
+      }
+      case "padOnFace": {
+        const base = shapes.get(o.target as string) as Solid;
+        const top = base.faces().filterBy(Axis.Z).sortBy(Axis.Z).last();
+        if (!top) throw new Error("padOnFace: no top face");
+        const pad = extrude(
+          faceOf(Rectangle(o.width as number, o.height as number, { on: top })),
+          o.amount as number,
+          {
+            dir: top.outerNormal(),
+          },
+        );
+        shapes.set(o.id, base.fuse(pad));
         break;
       }
       case "mirror": {

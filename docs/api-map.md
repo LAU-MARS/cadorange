@@ -31,11 +31,17 @@
 
 | build123d | cadorange | 里程碑 | 备注 |
 | --- | --- | --- | --- |
-| `Circle`, `Ellipse` | `Circle`/`Ellipse` | M1 | `makeCircle/makeEllipse` |
-| `Rectangle`, `RectangleRounded` | 同名 | M1 | `makePolygon` 组合 |
-| `RegularPolygon`, `Polygon`, `Triangle`, `Trapezoid` | 同名 | M1 | |
-| `SlotArc/SlotCenterPoint/SlotCenterToCenter/SlotOverall` | `slot()` | M1 | |
-| `Line`, `PolarLine`, `IntersectingLine`, `ThreePointArc`, `RadiusArc`, `SagittaArc`, `JernArc`, `CenterArc`, `Helix`, `Polyline`, `Spline`, `BSpline`, `Bezier` | 同名（camelCase） | M1 | occt.ts 有 `makeLine/makeArc/makeBspline(Through)/makePolygon`；Helix/JernArc 等纯数学部分直接移植 |
+| `Circle`, `Ellipse` | `Circle`（0.6.0）/ `Ellipse` | **M0.5✅**/M2 | `makeCircle`；`on: Face\|Plane` + `at: [u,v]` 定位（build123d 的 `Plane * Pos * prim`） |
+| `Rectangle`, `RectangleRounded` | `Rectangle`（0.6.0） | **M0.5✅** | 居中语义一致 |
+| `RegularPolygon`, `Polygon`, `Triangle`, `Trapezoid` | `RegularPolygon`/`Polygon`（0.6.0） | **M0.5✅** | Triangle/Trapezoid 用 Polygon 组合（M2 语法糖） |
+| `SlotCenterToCenter` | 同名（0.6.0） | **M0.5✅** | 其余 Slot 变体 M2 |
+| `Line`, `Polyline`, `ThreePointArc`, `RadiusArc`, `CenterArc` | 同名（0.6.0） | **M0.5✅** | 弧系纯 TS 数学（三点定圆/劣弧选取）下推 kernel makeArc |
+| `SagittaArc`, `JernArc`, `PolarLine`, `IntersectingLine`, `Helix`, `Spline`, `BSpline`, `Bezier` | — | M2 | kernel 有 `makeBspline(Through)`/`makeHelix` 待桥接 |
+| `extrude(sketch, amount)` | `extrude(profile, amount)`（0.6.0） | **M0.5✅** | Wire 记忆草图平面，沿法向；`dir` 可覆写 |
+| `revolve(sketch, axis)` | `revolve(profile, axis, angle?)`（0.6.0） | **M0.5✅** | 截面须在含轴平面 |
+| `make_face` | `faceOf(outer, holes)`（0.6.0） | **M0.5✅** | 2D 布尔 = face 上常规布尔 |
+| `GridLocations` | `gridLocations`（0.6.0） | **M0.5✅** | 返回 `[u,v]` 数组，配 `at` 使用 |
+| 2D `offset(sketch, dist)` | — | M2 | kernel 缺 2D wire 偏置（需求 R14） |
 | `Text`, `Draft`(制图), `DimensionLine` 系 | — | M3 | drafting 整组后置 |
 
 ## 操作（operations_part / generic）

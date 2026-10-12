@@ -157,6 +157,55 @@ class OcctKernel implements Kernel {
     return this.#adopt(at ? this.#occ.translate(s, at) : s);
   }
 
+  makeCircle(radius: number, origin: Vec3, normal: Vec3): ShapeHandle {
+    return this.#adopt(this.#occ.makeCircle(radius, { origin, normal }));
+  }
+
+  makePolygon(points: readonly Vec3[], close: boolean): ShapeHandle {
+    return this.#adopt(this.#occ.makePolygon(points, { close }));
+  }
+
+  makeLine(start: Vec3, end: Vec3): ShapeHandle {
+    return this.#adopt(this.#occ.makeLine(start, end));
+  }
+
+  makeArc(
+    radius: number,
+    origin: Vec3,
+    normal: Vec3,
+    startDegrees: number,
+    endDegrees: number,
+  ): ShapeHandle {
+    return this.#adopt(this.#occ.makeArc(radius, { origin, normal, startDegrees, endDegrees }));
+  }
+
+  makeWire(parts: readonly ShapeHandle[]): ShapeHandle {
+    return this.#adopt(this.#occ.makeWire(parts.map((h) => this.#raw(h))));
+  }
+
+  makeFace(outer: ShapeHandle, holes: readonly ShapeHandle[]): ShapeHandle {
+    return this.#adopt(
+      this.#occ.makeFace(
+        this.#raw(outer),
+        holes.map((h) => this.#raw(h)),
+      ),
+    );
+  }
+
+  extrude(profile: ShapeHandle, vector: Vec3): ShapeHandle {
+    return this.#adopt(this.#occ.extrude(this.#raw(profile), vector));
+  }
+
+  revolve(profile: ShapeHandle, origin: Vec3, direction: Vec3, angleDegrees: number): ShapeHandle {
+    return this.#adopt(
+      this.#occ.revolve(this.#raw(profile), {
+        origin,
+        direction,
+        angleDegrees,
+      }),
+    );
+  }
+
   boolean(
     op: "fuse" | "cut" | "common",
     a: ShapeHandle,
@@ -304,13 +353,6 @@ class OcctKernel implements Kernel {
       return { index: f.index, surface, area: f.area, center: f.center };
     });
 
-    const diagonal = Math.hypot(
-      bbox.max[0] - bbox.min[0],
-      bbox.max[1] - bbox.min[1],
-      bbox.max[2] - bbox.min[2],
-    );
-    const classified = this.#classifyEdges(raw, faces, edges, 1e-4 * diagonal);
-
     const meta: ShapeMeta = {
       shapeType: raw.shapeType(),
       volume: raw.volume(),
@@ -319,7 +361,7 @@ class OcctKernel implements Kernel {
       center: raw.centroid(),
       valid: raw.isValid(),
       faces,
-      edges: classified,
+      edges,
       vertices: d.vertices,
       holes: d.holes,
     };
@@ -336,15 +378,53 @@ class OcctKernel implements Kernel {
    * free: works for cone/torus faces too, no analytic normals needed.
    * Seam/free edges (adjacent-face count != 2) stay unclassified.
    */
-  #classifyEdges(raw: OccShape, faces: FaceMeta[], edges: EdgeMeta[], epsilon: number): EdgeMeta[] {
-    if (faces.length === 0 || edges.length === 0 || epsilon <= 0) {
-      return edges;
+  #convexityCache = new WeakMap<
+    ShapeHandle,
+    ReadonlyMap<number, "convex" | "concave" | "smooth">
+  >();
+
+  /**
+   * Lazy dihedral classification: computed on first `convexity` access
+   * (probe rings are point-classification heavy — eager meta() made
+   * boolean chains crawl).
+   */
+  edgeConvexities(s: ShapeHandle): ReadonlyMap<number, "convex" | "concave" | "smooth"> {
+    const cached = this.#convexityCache.get(s);
+    if (cached) {
+      return cached;
+    }
+    const meta = this.meta(s);
+    const bb = meta.bbox;
+    const diagonal = Math.hypot(
+      bb.max[0] - bb.min[0],
+      bb.max[1] - bb.min[1],
+      bb.max[2] - bb.min[2],
+    );
+    const result = this.#classifyEdges(
+      this.#raw(s),
+      meta.faces.map((f) => f.index),
+      meta.edges,
+      1e-4 * diagonal,
+    );
+    this.#convexityCache.set(s, result);
+    return result;
+  }
+
+  #classifyEdges(
+    raw: OccShape,
+    faceIndices: readonly number[],
+    edgeMetas: readonly EdgeMeta[],
+    epsilon: number,
+  ): ReadonlyMap<number, "convex" | "concave" | "smooth"> {
+    const empty: ReadonlyMap<number, "convex" | "concave" | "smooth"> = new Map();
+    if (faceIndices.length === 0 || edgeMetas.length === 0 || epsilon <= 0) {
+      return empty;
     }
     const faceShapes = this.#occ.subShapes(raw, "Face");
     const edgeShapes = this.#occ.subShapes(raw, "Edge");
-    const edgeFaces: number[][] = edges.map(() => []);
+    const edgeFaces: number[][] = edgeMetas.map(() => []);
     try {
-      for (let j = 0; j < faceShapes.length && j < faces.length; j++) {
+      for (let j = 0; j < faceShapes.length && j < faceIndices.length; j++) {
         const faceShape = faceShapes[j];
         if (!faceShape) {
           continue;
@@ -372,13 +452,14 @@ class OcctKernel implements Kernel {
       }
     }
 
-    return edges.map((edge, i) => {
+    const result = new Map<number, "convex" | "concave" | "smooth">();
+    edgeMetas.forEach((edge, i) => {
       if ((edgeFaces[i] ?? []).length !== 2) {
-        return edge; // seam (same face twice), free edge
+        return; // seam (same face twice), free edge
       }
       const tangent = this.#edgeTangent(edge);
       if (!tangent) {
-        return edge;
+        return;
       }
       const anchor = edge.arcPoint ?? edge.center;
       // orthonormal basis perpendicular to the edge
@@ -405,22 +486,23 @@ class OcctKernel implements Kernel {
         }
       }
       if (decisive < 8) {
-        return edge; // too many ambiguous probes — stay unclassified
+        return; // too many ambiguous probes — stay unclassified
       }
       const wedge = this.#materialWedge(coarse, clsAt);
       if (wedge === undefined) {
-        return edge;
+        return;
       }
       // wedge is the material angle in radians; smooth = tangent faces (~π)
       const SMOOTH_TOL = Math.PI / 36; // 5°
       if (wedge < Math.PI - SMOOTH_TOL) {
-        return { ...edge, convexity: "convex" };
+        result.set(edge.index, "convex");
+      } else if (wedge > Math.PI + SMOOTH_TOL) {
+        result.set(edge.index, "concave");
+      } else {
+        result.set(edge.index, "smooth");
       }
-      if (wedge > Math.PI + SMOOTH_TOL) {
-        return { ...edge, convexity: "concave" };
-      }
-      return { ...edge, convexity: "smooth" };
     });
+    return result;
   }
 
   /**

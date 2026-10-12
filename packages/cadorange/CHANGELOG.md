@@ -1,5 +1,19 @@
 # cadorange
 
+## 0.6.0
+
+### Minor Changes
+
+- Sketch chain — build123d objects_sketch/objects_curve in algebra form, corpus translation begins.
+  
+  - Primitives returning `Wire` (recorded on their sketch plane): `Circle`, `Rectangle`, `RegularPolygon`, `Polygon`, `Line`, `Polyline`, `ThreePointArc`, `RadiusArc`, `CenterArc`, `SlotCenterToCenter`
+  - Placement: `at: [u, v]` local offset and `on: Face | Plane` sketch-on-face — the `Plane * Pos * prim` pattern; `faceOf(outer, holes)` caps profiles for 2D booleans; `gridLocations` matches `GridLocations`
+  - `extrude(profile, amount)` extrudes along the wire's remembered plane normal (`dir` override); `revolve(profile, axis, angle?)` — both replaced the M1 stubs
+  - `Face.outerNormal()`: kernel normals are unoriented; outward direction is probe-calibrated and cached. All face-growing paths (sketch-on-face, workplanes) use it
+  - Edge convexity is now lazy (probe rings were the meta() hot path — boolean chains timed out; now computed on first `convexity` access, cached per shape)
+  - Parity 17/17 including hex nut (polygon + bore + chamfer), pad-on-face, slot extrude and tube revolve against Python build123d; first corpus translation: `examples/boxes_on_faces.ts`
+  - New kernel requirement R14: 2D wire offset (blocks lego-style wall construction)
+
 ## 0.5.0
 
 ### Minor Changes

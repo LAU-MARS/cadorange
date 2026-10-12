@@ -50,6 +50,24 @@ def build(op: dict, shapes: dict):
         if not isinstance(shape, bd.Shape):
             shape = shape[0]
         return shape
+    elif kind == "polygonR":
+        return bd.RegularPolygon(op["radius"], op["sides"])
+    elif kind == "sketchSlot":
+        return bd.SlotCenterToCenter(op["length"], op["diameter"])
+    elif kind == "rectOnXZ":
+        shape = bd.Rectangle(op["width"], op["height"])
+        u, v = op.get("at", [0, 0])
+        return bd.Plane.XZ * bd.Pos(u, v) * shape
+    elif kind == "extrudeSketch":
+        return bd.extrude(shapes[op["target"]], amount=op["amount"])
+    elif kind == "revolveSketch":
+        return bd.revolve(shapes[op["target"]], axis=bd.Axis.Z, revolution_arc=op.get("angle", 360))
+    elif kind == "padOnFace":
+        base = shapes[op["target"]]
+        top = base.faces().sort_by(bd.Axis.Z).last
+        pad = bd.Plane(top) * bd.Rectangle(op["width"], op["height"])
+        pad = bd.extrude(pad, amount=op["amount"])
+        return base.fuse(pad)
     elif kind == "mirror":
         part = shapes[op["target"]]
         ox, oy, oz, nx, ny, nz = op["plane"]

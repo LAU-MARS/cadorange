@@ -41,5 +41,21 @@ export type { OpEvent, OpListener, OpRecord, OpStatus } from "./record";
 export { onOp, record } from "./record";
 export type { Selector, SubShape } from "./selectors";
 export { parseSelector } from "./selectors";
+export type { SketchOpts } from "./sketch";
+export {
+  CenterArc,
+  Circle,
+  combineWires,
+  faceOf,
+  gridLocations,
+  Line,
+  Polygon,
+  Polyline,
+  RadiusArc,
+  Rectangle,
+  RegularPolygon,
+  SlotCenterToCenter,
+  ThreePointArc,
+} from "./sketch";
 export type { Describe } from "./topo";
-export { Edge, Face, Shape, ShapeList, Solid, Vertex } from "./topo";
+export { Edge, Face, Shape, ShapeList, Solid, Vertex, Wire } from "./topo";

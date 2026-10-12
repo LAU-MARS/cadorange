@@ -118,6 +118,33 @@ export interface Kernel {
   makeCone(radius1: number, radius2: number, height: number, at?: Vec3): ShapeHandle;
   makeTorus(radius1: number, radius2: number, at?: Vec3): ShapeHandle;
 
+  /* ----------------------------- sketch layer ---------------------------- */
+  /** Circle wire of `radius` centered at `origin`, plane normal `normal`. */
+  makeCircle(radius: number, origin: Vec3, normal: Vec3): ShapeHandle;
+  /** Closed (default) or open polygon wire through world-space `points`. */
+  makePolygon(points: readonly Vec3[], close: boolean): ShapeHandle;
+  /** Line-segment wire from `start` to `end`. */
+  makeLine(start: Vec3, end: Vec3): ShapeHandle;
+  /**
+   * Circular-arc wire of `radius` around `origin`/`normal` (right-hand rule),
+   * from `startDegrees` to `endDegrees` (CCW, span < 360°).
+   */
+  makeArc(
+    radius: number,
+    origin: Vec3,
+    normal: Vec3,
+    startDegrees: number,
+    endDegrees: number,
+  ): ShapeHandle;
+  /** Concatenate connected wires/edges into one wire, in order. */
+  makeWire(parts: readonly ShapeHandle[]): ShapeHandle;
+  /** Cap a planar outer wire into a face, with optional inner hole wires. */
+  makeFace(outer: ShapeHandle, holes: readonly ShapeHandle[]): ShapeHandle;
+  /** Extrude a planar profile (wire or face) along `vector` into a solid. */
+  extrude(profile: ShapeHandle, vector: Vec3): ShapeHandle;
+  /** Revolve a planar profile around the axis `origin → origin+direction`. */
+  revolve(profile: ShapeHandle, origin: Vec3, direction: Vec3, angleDegrees: number): ShapeHandle;
+
   /**
    * Booleans clean by default (UnifySameDomain — same as build123d/CadQuery):
    * coplanar faces merge, collinear edges join. `clean: false` keeps raw
@@ -152,6 +179,11 @@ export interface Kernel {
   meta(s: ShapeHandle): ShapeMeta;
   isValid(s: ShapeHandle): boolean;
   classifyPoint(s: ShapeHandle, point: Vec3): "in" | "out" | "on" | "unknown";
+  /**
+   * Lazy dihedral classification: edge index -> convex/concave/smooth.
+   * Probe-ring based (expensive) — computed on demand, cached per handle.
+   */
+  edgeConvexities(s: ShapeHandle): ReadonlyMap<number, "convex" | "concave" | "smooth">;
 
   exportStep(s: ShapeHandle): Uint8Array;
   /** Ascii STL. */

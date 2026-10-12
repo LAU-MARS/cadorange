@@ -265,6 +265,101 @@
         }
       ],
       "result": "c"
+    },
+    {
+      "name": "hex_nut",
+      "ops": [
+        {
+          "op": "polygonR",
+          "id": "hex",
+          "radius": 8,
+          "sides": 6
+        },
+        {
+          "op": "extrudeSketch",
+          "id": "body",
+          "target": "hex",
+          "amount": 5
+        },
+        {
+          "op": "cylinder",
+          "id": "bore",
+          "radius": 4.2,
+          "height": 7,
+          "origin": [0, 0, -1]
+        },
+        {
+          "op": "cut",
+          "id": "nut",
+          "target": "body",
+          "tool": "bore"
+        },
+        {
+          "op": "chamferZ",
+          "id": "done",
+          "target": "nut",
+          "distance": 0.8
+        }
+      ],
+      "result": "done"
+    },
+    {
+      "name": "pad_on_top_face",
+      "ops": [
+        {
+          "op": "box",
+          "id": "base",
+          "dx": 20,
+          "dy": 20,
+          "dz": 10
+        },
+        {
+          "op": "padOnFace",
+          "id": "part",
+          "target": "base",
+          "width": 8,
+          "height": 6,
+          "amount": 2
+        }
+      ],
+      "result": "part"
+    },
+    {
+      "name": "slot_extrude",
+      "ops": [
+        {
+          "op": "sketchSlot",
+          "id": "s",
+          "length": 10,
+          "diameter": 6
+        },
+        {
+          "op": "extrudeSketch",
+          "id": "p",
+          "target": "s",
+          "amount": 2
+        }
+      ],
+      "result": "p"
+    },
+    {
+      "name": "tube_revolve",
+      "ops": [
+        {
+          "op": "rectOnXZ",
+          "id": "sec",
+          "width": 2,
+          "height": 4,
+          "at": [4, 0]
+        },
+        {
+          "op": "revolveSketch",
+          "id": "tube",
+          "target": "sec",
+          "angle": 360
+        }
+      ],
+      "result": "tube"
     }
   ]
 }

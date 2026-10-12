@@ -1,0 +1,27 @@
+{
+  "name": "pad_on_top_face",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 4095.999999999999,
+    "area": 1656.0,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      20.0,
+      20.0,
+      12.0
+    ],
+    "faces": 11,
+    "edges": 24,
+    "vertices": 16,
+    "concaveEdges": 4,
+    "convexEdges": 20,
+    "valid": true
+  }
+}
