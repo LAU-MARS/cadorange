@@ -97,6 +97,7 @@ CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z
 | build123d | cadorange | 里程碑 |
 | --- | --- | --- |
 | `export_step/import_step` | `export/importStep` | **M0** |
+| 装配 STEP（label/color/实例变换/嵌套） | `importStepAssembly`/`exportStepAssembly` + `AssemblyNode` 树 | **0.8.1** | 叶子世界定位（实例变换烘焙，R17 临时方案）；STEP 颜色规范化为大写 hex |
 | `export_stl/import_stl` | `exportStl`（ascii 先行）/ `importStl` | **M0** / M2 |
 | `export_gltf` | `exportGlb` | **M0** |
 | `export_brep/import_brep` | 同名 | M1 |

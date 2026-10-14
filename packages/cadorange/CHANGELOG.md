@@ -1,5 +1,17 @@
 # cadorange
 
+## 0.8.1
+
+### Patch Changes
+
+- STEP assembly bridge — build123d import_step/export_step assembly semantics.
+  
+  - `importStepAssembly(data)` → `{ tree, shapes }`: the assembly tree (names, colors, instance transforms, nesting) with every leaf as a world-positioned `Solid` ready for modeling — walk the tree or use `shapes` flat
+  - `exportStepAssembly(nodes)` writes labels/colors/nesting back; instance transforms are baked into copies of the leaves (the kernel currently drops transforms on round-trip — R17; baking is internal, the API stays stable when the kernel fixes it)
+  - Leaf shapes are adopted eagerly, so reading a second document never invalidates the first
+  - Kernel rule surfaced: a document node carries either a shape or children (assembly vs leaf)
+  - Parity 23/23 with a new two-side STEP-assembly round-trip case
+
 ## 0.8.0
 
 ### Minor Changes

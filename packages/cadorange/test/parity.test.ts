@@ -21,9 +21,11 @@ import {
   chamfer,
   compound,
   Ellipse,
+  exportStepAssembly,
   extrude,
   faceOf,
   fillet,
+  importStepAssembly,
   init,
   loft,
   mirror,
@@ -182,6 +184,22 @@ function runCase(c: Case): Solid {
           },
         );
         shapes.set(o.id, base.fuse(pad));
+        break;
+      }
+      case "assemblyRoundtrip": {
+        const plate = Box(80, 60, 10);
+        const pin = Cylinder({ radius: 4, height: 30, loc: { origin: [40, 30, 10] } });
+        const bytes = exportStepAssembly([
+          { name: "plate", color: null, transform: null, solid: plate },
+          {
+            name: "pins",
+            color: null,
+            transform: null,
+            children: [{ name: "pin-1", color: null, transform: null, solid: pin }],
+          },
+        ]);
+        const doc = importStepAssembly(bytes);
+        shapes.set(o.id, compound(doc.shapes));
         break;
       }
       case "offsetSolid": {

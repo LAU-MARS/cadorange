@@ -226,6 +226,52 @@ export function mat3ToAxisAngle(a: Mat3): { axis: Vec3; angleDegrees: number } {
   return { axis, angleDegrees: (angle * 180) / Math.PI };
 }
 
+/* --------------------- 3x4 affine transforms (STEP) -------------------- */
+/** Row-major 3x4: [r11,r12,r13,t1, r21,r22,r23,t2, r31,r32,r33,t3]. */
+export type Mat34 = readonly number[];
+
+export function identity34(): Mat34 {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
+}
+
+export function mul34(a: Mat34, b: Mat34): Mat34 {
+  const out: number[] = [];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 4; c++) {
+      let sum = 0;
+      for (let k = 0; k < 3; k++) {
+        sum += (a[r * 4 + k] ?? 0) * (b[k * 4 + c] ?? 0);
+      }
+      if (c === 3) {
+        sum += a[r * 4 + 3] ?? 0;
+      }
+      out.push(sum);
+    }
+  }
+  return out;
+}
+
+export function apply34(m: Mat34, p: Vec3): Vec3 {
+  return [
+    (m[0] ?? 0) * p[0] + (m[1] ?? 0) * p[1] + (m[2] ?? 0) * p[2] + (m[3] ?? 0),
+    (m[4] ?? 0) * p[0] + (m[5] ?? 0) * p[1] + (m[6] ?? 0) * p[2] + (m[7] ?? 0),
+    (m[8] ?? 0) * p[0] + (m[9] ?? 0) * p[1] + (m[10] ?? 0) * p[2] + (m[11] ?? 0),
+  ];
+}
+
+/** Rotation part of a 3x4 as a Mat3 (for mat3ToAxisAngle baking). */
+export function mat34Rotation(m: Mat34): Mat3 {
+  return [
+    [m[0] ?? 0, m[1] ?? 0, m[2] ?? 0],
+    [m[4] ?? 0, m[5] ?? 0, m[6] ?? 0],
+    [m[8] ?? 0, m[9] ?? 0, m[10] ?? 0],
+  ];
+}
+
+export function mat34Translation(m: Mat34): Vec3 {
+  return [m[3] ?? 0, m[7] ?? 0, m[11] ?? 0];
+}
+
 /** RGBA color value (build123d `Color` — a plain value here, no OCCT binding). */
 export interface Color {
   readonly r: number;

@@ -95,6 +95,20 @@ def build(op: dict, shapes: dict):
         return base.cut(prism)
     elif kind == "sketchEllipse":
         return bd.Ellipse(op["major"], op["minor"])
+    elif kind == "assemblyRoundtrip":
+        import os
+        import tempfile
+
+        plate = bd.Box(80, 60, 10, align=(bd.Align.MIN, bd.Align.MIN, bd.Align.MIN))
+        plate.label = "plate"
+        pin = bd.Pos(40, 30, 10) * bd.Cylinder(
+            4, 30, align=(bd.Align.CENTER, bd.Align.CENTER, bd.Align.MIN)
+        )
+        pin.label = "pin-1"
+        asm = bd.Compound(children=[plate, bd.Compound(children=[pin])])
+        path = os.path.join(tempfile.gettempdir(), "cadorange_parity_asm.step")
+        bd.export_step(asm, path)
+        return bd.import_step(path)
     elif kind == "offsetSolid":
         return bd.offset(shapes[op["target"]], op["distance"])
     elif kind == "mirror":

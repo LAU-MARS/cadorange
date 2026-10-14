@@ -1,8 +1,17 @@
-import { type MeshData, meshToAsciiStl, meshToObj, type OccSession, type OccShape } from "occt.ts";
+import {
+  type MeshData,
+  meshToAsciiStl,
+  meshToObj,
+  type OccSession,
+  type OccShape,
+  type WriteDocumentNode,
+} from "occt.ts";
 import { type Vec3, v } from "../geom";
 import type {
   CurveKind,
+  DocNode,
   EdgeMeta,
+  ExportDocNode,
   FaceMeta,
   Kernel,
   ShapeHandle,
@@ -697,6 +706,26 @@ class OcctKernel implements Kernel {
 
   importStep(data: Uint8Array): ShapeHandle {
     return this.#adopt(this.#occ.readStep(data));
+  }
+
+  readStepDocument(data: Uint8Array): { tree: DocNode[]; shapes: ShapeHandle[] } {
+    const doc = this.#occ.readStepDocument(data);
+    const shapes: ShapeHandle[] = [];
+    for (let i = 0; i < doc.shapeCount; i++) {
+      shapes.push(this.#adopt(this.#occ.documentShape(i)));
+    }
+    return { tree: doc.tree, shapes };
+  }
+
+  writeStepDocument(nodes: readonly ExportDocNode[]): Uint8Array {
+    const convert = (n: ExportDocNode): WriteDocumentNode => ({
+      ...(n.name !== undefined ? { name: n.name } : {}),
+      ...(n.color !== undefined ? { color: n.color } : {}),
+      ...(n.transform !== undefined ? { transform: [...n.transform] } : {}),
+      ...(n.shape !== undefined ? { shape: this.#raw(n.shape) } : {}),
+      ...(n.children ? { children: n.children.map(convert) } : {}),
+    });
+    return this.#occ.writeStepDocument(nodes.map(convert));
   }
 
   importBrep(data: Uint8Array): ShapeHandle {

@@ -21,16 +21,18 @@ export {
   transpose3,
   v,
 } from "./geom";
-export type { ExportFormat } from "./io";
+export type { AssemblyNode, ExportFormat, StepAssembly } from "./io";
 export {
   exportBrep,
   exportGlb,
   exportObj,
   exportShape,
   exportStep,
+  exportStepAssembly,
   exportStl,
   importBrep,
   importStep,
+  importStepAssembly,
 } from "./io";
 export type {
   CurveKind,

@@ -95,6 +95,27 @@ export interface ShapeMeta {
   readonly holes: readonly HoleMeta[];
 }
 
+/** STEP assembly-tree node as read by the kernel (build123d `import_step` semantics). */
+export interface DocNode {
+  name: string | null;
+  /** "#RRGGBB" or null. */
+  color: string | null;
+  /** 12 numbers, row-major 3x4 (rotation + translation); null = identity. */
+  transform: number[] | null;
+  /** Leaf: index into the document's shape list. */
+  shape?: number;
+  children?: DocNode[];
+}
+
+/** Mirror for writing an assembly STEP (build123d `export_step` semantics). */
+export interface ExportDocNode {
+  name?: string;
+  color?: string;
+  shape?: ShapeHandle;
+  children?: readonly ExportDocNode[];
+  transform?: readonly number[];
+}
+
 /** Metadata for one vertex. `index` is 1-based, like faces/edges. */
 export interface VertexMeta {
   readonly index: number;
@@ -216,6 +237,14 @@ export interface Kernel {
   exportStl(s: ShapeHandle, tolerance?: number): string;
   exportGlb(s: ShapeHandle): Uint8Array;
   importStep(data: Uint8Array): ShapeHandle;
+  /**
+   * Reads a STEP assembly document: the JSON tree (names/colors/instance
+   * transforms) plus every leaf adopted as a handle immediately — leaf
+   * lookups are session-scoped, so we resolve them all in one go.
+   */
+  readStepDocument(data: Uint8Array): { tree: DocNode[]; shapes: ShapeHandle[] };
+  /** Writes an assembly STEP document back. */
+  writeStepDocument(nodes: readonly ExportDocNode[]): Uint8Array;
   importBrep(data: Uint8Array): ShapeHandle;
   exportBrep(s: ShapeHandle): Uint8Array;
   /** Wavefront OBJ text. */

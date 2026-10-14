@@ -152,6 +152,19 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **cadorange 临时方案**：`cadorange/occt` 自声明结构化 `RawShape` 接口
   （isNull/shapeType/isSame/isEqual/delete 稳定面）。
 
+### R17 writeStepDocument 的 transform 不生效（P1，2026-10-14 实测）
+
+- **证据**：`writeStepDocument([{name, shape, transform:[平移40]}])` →
+  `readStepDocument` 读回，`documentShape(0)` 的 bbox 仍是原始位置
+  （transform 未反映在"world-positioned"叶子上；原生层复现）。
+- **影响**：装配实例位置在 round-trip 中丢失。
+- **cadorange 临时方案**：io 层双向烘焙——读侧把树上的累计 transform
+  （rotate+translate）烘到叶子（对齐 build123d import_step 的世界定位
+  语义）；写侧把 transform 先烘焙再写。内核修复后可去烘焙（内部实现细节，
+  API 不变）。
+- **另**：writeStepDocument 节点不能同时带 shape 和 children（装配/叶子
+  二选一），建议在 .d.ts 注明。
+
 ## 已验证可用的能力（2026-10-10，occt.ts 0.10.0 + OCCT 7.9.x，Node 端实测）
 
 | M0 需求 | occt.ts 能力 | 状态 |

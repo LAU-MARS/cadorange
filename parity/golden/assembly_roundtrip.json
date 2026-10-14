@@ -1,0 +1,25 @@
+{
+  "name": "assembly_roundtrip",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 49507.9644737231,
+    "area": 13254.51320177647,
+    "bboxMin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bboxMax": [
+      80.0,
+      60.0,
+      40.0
+    ],
+    "faces": 9,
+    "edges": 15,
+    "vertices": 10,
+    "valid": true
+  }
+}

@@ -455,6 +455,16 @@
       "result": "b",
       "verticesTolerance": 2,
       "$note": "seam-edge vertex bookkeeping differs (closed smooth sections count seam vertices differently)"
+    },
+    {
+      "name": "assembly_roundtrip",
+      "ops": [
+        {
+          "op": "assemblyRoundtrip",
+          "id": "a"
+        }
+      ],
+      "result": "a"
     }
   ]
 }
