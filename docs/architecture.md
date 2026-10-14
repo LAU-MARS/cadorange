@@ -36,9 +36,10 @@ cadorange/
 ├─ NOTICE  LICENSE  biome.json  pnpm-workspace.yaml  .changeset/
 ```
 
-**原则:只有 `kernel/` 能 import occt.ts**,其余代码都通过 `Kernel` 接口访问
-(`packages/cadorange/src/kernel/types.ts`)。这样以后升级 occt.ts、做 mock 测试或换内核
-都不受影响,也能明确知道 occt.ts 缺哪些 API。
+**原则:包内只有两处 import occt.ts** —— `kernel/`(实现层,经 `Kernel` 接口访问,
+可升级/mock/换内核)与 `src/occt/`(受支持逃生口 `cadorange/occt`,直通 session
+与 152 个原始类,对齐 build123d↔OCP 的共存关系,见 ADR-0001)。其余代码一律走
+`Kernel` 接口;occt.ts 缺口登记在 [occt-requirements.md](./occt-requirements.md)。
 
 ## 2. 工具链
 

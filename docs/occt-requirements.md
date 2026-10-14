@@ -143,6 +143,15 @@ cadorange 在需求落地前会采用表中标注的临时方案。
   朝向无关、面型无关(cone/torus 通用)。parity L 型用例凹/凸计数与 build123d
   一致(1/17);全边 fillet 后 23 条切线边全部 smooth。
 
+### R16 暴露 raw 层类型（P2，2026-10-14 新增）
+
+- **理由**：`occ.toRaw()` 返回的 `Raw_TopoDS_Shape` 类型定义在内部模块
+  `raw.generated`（未列入 exports），下游拿不到类型名只能鸭子断言。
+- **建议**：主入口 re-export 全部 `Raw_*`/`Ctor_*` 类型，或 exports 增加
+  `./raw.generated` 子路径。
+- **cadorange 临时方案**：`cadorange/occt` 自声明结构化 `RawShape` 接口
+  （isNull/shapeType/isSame/isEqual/delete 稳定面）。
+
 ## 已验证可用的能力（2026-10-10，occt.ts 0.10.0 + OCCT 7.9.x，Node 端实测）
 
 | M0 需求 | occt.ts 能力 | 状态 |

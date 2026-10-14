@@ -32,6 +32,14 @@ export async function init(opts: InitOptions = {}): Promise<void> {
   kernel = new OcctKernel(session);
 }
 
+/** The live OccSession (escape hatch — see `cadorange/occt`, ADR-0001). */
+export function getOccSession(): OccSession {
+  if (!session) {
+    throw new Error("cadorange is not initialized — await init() first.");
+  }
+  return session;
+}
+
 /** The process-wide kernel. Throws a structured error before `init()`. */
 export function getKernel(): Kernel {
   if (!kernel) {
@@ -718,6 +726,14 @@ class OcctKernel implements Kernel {
       h2 >>>= 0;
     }
     return `brep-${bytes.length.toString(16)}-${h1.toString(16)}${h2.toString(16).padStart(8, "0")}`;
+  }
+
+  wrapped(s: ShapeHandle): unknown {
+    return this.#raw(s);
+  }
+
+  adoptWrapped(o: unknown): ShapeHandle {
+    return this.#adopt(o as OccShape);
   }
 
   dispose(s: ShapeHandle): void {

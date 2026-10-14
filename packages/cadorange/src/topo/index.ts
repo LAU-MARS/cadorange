@@ -295,6 +295,15 @@ export class Shape {
     return chamfer(this, edges, distance, length2);
   }
 
+  /**
+   * The high-level kernel handle behind this shape (ADR-0001, mirroring
+   * build123d's `Shape.wrapped`). Lifecycle is managed by cadorange —
+   * don't dispose; use `cadorange/occt` to dive further.
+   */
+  get wrapped(): unknown {
+    return getKernel().wrapped(this.handle);
+  }
+
   /** Export by file extension (.step/.stl/.glb). Node writes to disk. */
   async export(path: string, opts?: { tolerance?: number }): Promise<void> {
     const { exportShape } = await import("../io");

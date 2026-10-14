@@ -1,5 +1,18 @@
 # cadorange
 
+## 0.8.0
+
+### Minor Changes
+
+- ADR-0001: the cadorange↔occt.ts relationship now mirrors build123d↔OCP — coexistence, not wrapping.
+  
+  - New supported escape hatch `cadorange/occt`: `getOcc()` (the live OccSession, incl. `occ.module` with the 152 raw OCCT classes), `toRaw(shape)`/`fromRaw(raw)` bridging, `asOccShape()` narrowing
+  - `Shape.wrapped` exposes the kernel handle (the analogue of build123d's `Shape.wrapped: TopoDS_Shape`)
+  - Raw objects are JS-owned: the `.delete()` discipline is documented as the caller's
+  - Internal architecture unchanged — `kernel/` remains the implementation-side single access point; `cadorange/occt` is the second (and only other) occt.ts import site
+  - ADRs established under docs/adr/ (0001 kernel relationship, 0002 algebra-mode-first, 0003 single package, 0004 parity as the alignment metric)
+  - New kernel requirement R16: expose raw-layer types (Raw_*/Ctor_*) from occt.ts; cadorange ships a structural RawShape interface meanwhile
+
 ## 0.7.0
 
 ### Minor Changes

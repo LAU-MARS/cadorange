@@ -132,6 +132,12 @@ CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z
    子体（其自身怪癖，实测 0.13.0）；cadorange 报所有子体之和（物理正确）。
    parity 用例 mirror_compound 已标注此差异。
 
+## 与内核的关系（ADR-0001）
+
+对齐 build123d↔OCP：共存而非包裹。`cadorange/occt` 子路径是受支持的
+逃生口（`getOcc()`/`toRaw`/`fromRaw` + `occ.module` 152 原始类），
+`Shape.wrapped` 公开内核句柄（类比 build123d `Shape.wrapped: TopoDS_Shape`）。
+
 ## 实现进度（2026-10-12，occt.ts 1.0.0，"126 核心 API 对齐"轮）
 
 **核心 API 覆盖 ≈ 91/126（72%）**（其中 Superellipse/ConicArc 为采样近似版）。

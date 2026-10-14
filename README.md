@@ -165,6 +165,7 @@ One npm package, like build123d — everything below is a subpath export of `cad
 | `cadorange/runtime` | Session, op log, snapshots, structured errors, sandboxed execution | planned (M0.5) — interface skeleton |
 | `cadorange/render` | Headless multi-view rendering (PNG/SVG) | planned (M2) — interface skeleton |
 | `cadorange/mcp` + `cado` CLI | MCP server (`npx -y cadorange mcp`) and the `cado` CLI | planned (M2) — interface skeleton |
+| `cadorange/occt` | Supported escape hatch: raw OCCT classes, `toRaw`/`fromRaw`, `shape.wrapped` (like build123d ↔ OCP) | shipped |
 
 ## Why TypeScript?
 

@@ -224,6 +224,10 @@ export interface Kernel {
   /** Deterministic checksum (BRep serialization hash), for caching and eval replay. */
   hash(s: ShapeHandle): string;
 
+  /** The high-level OccShape behind a handle (ADR-0001 escape hatch). */
+  wrapped(s: ShapeHandle): unknown;
+  /** Adopts an external high-level OccShape into the registry. */
+  adoptWrapped(o: unknown): ShapeHandle;
   /** WASM memory is not GC'd — dispose explicitly. */
   dispose(s: ShapeHandle): void;
 }

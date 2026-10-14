@@ -7,6 +7,7 @@ export default defineConfig({
     "src/runtime/index.ts",
     "src/render/index.ts",
     "src/mcp/index.ts",
+    "src/occt/index.ts",
     "src/cli.ts",
   ],
   format: "esm",
