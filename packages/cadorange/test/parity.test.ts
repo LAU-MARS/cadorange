@@ -80,7 +80,7 @@ interface Golden {
   };
 }
 
-function runCase(c: Case): Solid {
+async function runCase(c: Case): Promise<Solid> {
   const shapes = new Map<string, Solid>();
   for (const o of c.ops) {
     const origin = o.origin as [number, number, number] | undefined;
@@ -186,6 +186,12 @@ function runCase(c: Case): Solid {
         shapes.set(o.id, base.fuse(pad));
         break;
       }
+      case "lego": {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const mod = await import("../../../examples/lego");
+        shapes.set(o.id, mod.buildLego());
+        break;
+      }
       case "assemblyRoundtrip": {
         const plate = Box(80, 60, 10);
         const pin = Cylinder({ radius: 4, height: 30, loc: { origin: [40, 30, 10] } });
@@ -281,13 +287,13 @@ beforeAll(async () => {
 
 describe("parity vs build123d", () => {
   for (const c of cases) {
-    it(c.name, () => {
+    it(c.name, async () => {
       const goldenPath = join(PARITY_DIR, "golden", `${c.name}.json`);
       if (!existsSync(goldenPath)) {
         return; // goldens regenerate only where build123d is installed
       }
       const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as Golden;
-      const part = runCase(c);
+      const part = await runCase(c);
       const d = part.describe();
       const m = golden.metrics;
 

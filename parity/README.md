@@ -32,7 +32,7 @@ pnpm vitest run packages/cadorange/test/parity.test.ts
 
 ## 当前状态（2026-10-12，occt.ts 1.0.0）
 
-23/23 通过（新增装配 STEP round-trip 用例），**全部用例在默认（最严）容差下**：体积/面积与 build123d 逐位一致
+24/24 通过（新增 lego——首个 R14 解锁的完整语料，逐位一致），**全部用例在默认（最严）容差下**：体积/面积与 build123d 逐位一致
 （含 blend 用例），面/边/顶点计数完全一致，**凹/凸边计数一致（L 型 1/17）**，
 bbox 1e-4。唯一显式标注差异：mirror_compound 的 volume（build123d
 Compound.volume 只报单子体的怪癖，cadorange 报子体之和）。

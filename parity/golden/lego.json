@@ -1,0 +1,25 @@
+{
+  "name": "lego",
+  "meta": {
+    "reference": "build123d",
+    "build123d": "0.13.0"
+  },
+  "metrics": {
+    "volume": 3076.4928416247612,
+    "area": 5830.913977193477,
+    "bboxMin": [
+      -24.0,
+      -8.0,
+      0.0
+    ],
+    "bboxMax": [
+      24.0,
+      8.0,
+      11.4
+    ],
+    "faces": 131,
+    "edges": 282,
+    "vertices": 188,
+    "valid": true
+  }
+}

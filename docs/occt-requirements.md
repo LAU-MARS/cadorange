@@ -155,8 +155,8 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 ### R17 writeStepDocument 的 transform 不生效（P1，2026-10-14 实测）
 
 - **证据**：`writeStepDocument([{name, shape, transform:[平移40]}])` →
-  `readStepDocument` 读回，`documentShape(0)` 的 bbox 仍是原始位置
-  （transform 未反映在"world-positioned"叶子上；原生层复现）。
+  `readStepDocument` 读回，`documentShape(0)` 的 bbox 仍是原始位置；**1.1.0
+  复测：树上的 transform 也读回为 null（写侧丢失），仍未修**。
 - **影响**：装配实例位置在 round-trip 中丢失。
 - **cadorange 临时方案**：io 层双向烘焙——读侧把树上的累计 transform
   （rotate+translate）烘到叶子（对齐 build123d import_step 的世界定位
@@ -164,6 +164,15 @@ cadorange 在需求落地前会采用表中标注的临时方案。
   API 不变）。
 - **另**：writeStepDocument 节点不能同时带 shape 和 children（装配/叶子
   二选一），建议在 .d.ts 注明。
+
+### R15 椭圆弧 / Bezier / project ✅ 已解决(1.1.0；cadorange 0.9.0 已采纳)
+
+- `makeEllipseArc(major, minor, {origin, normal, startDegrees, endDegrees})`
+  → `EllipticalCenterArc`/`EllipticalStartArc`（describe 报 `"ellipse"`，可再编辑）
+- `makeBezier(poles, {weights})`（有理=精确圆锥曲线）
+- `project(shape, target, {direction})` → engraving 曲线（target 须 Face/Shell；
+  cadorange ops 层自动解包 Face 视图）
+- 小注：bezier 边的 describe 曲线归类为 `"other"`（不影响使用）。
 
 ## 已验证可用的能力（2026-10-10，occt.ts 0.10.0 + OCCT 7.9.x，Node 端实测）
 
@@ -182,14 +191,14 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 最严容差验证（10/10，面/边计数与 build123d 完全一致）**。未解决仅 R7/R8/R9
 （深度对标基建，M2+）。
 
-### R14 2D 草图偏置（P1，2026-10-12 新增）
+### R14 2D 草图偏置 ✅ 已解决(1.1.0：`offsetWire(profile, distance, {join})`；cadorange 0.9.0 已采纳，lego 语料逐位对拍)
 
-- **理由**：build123d 草图流的核心操作 `offset(plan, -t)`（lego 类示例的
+- **理由（历史）**：build123d 草图流的核心操作 `offset(plan, -t)`（lego 类示例的
   壁厚构造）。目前 occt.ts 只有 `offsetSolid`（3D）；cadorange 的 2D 布尔
   靠 face 组合，缺 2D 等距。
 - **建议**：`offsetWire(wire, distance): OccShape`（BRepOffsetAPI_MakeOffset
   对 wire），或确认 face 上的 `offsetSolid` 语义可复用。
-- **临时方案**：转译用矩形差/和重写（形状不保圆角，lego 示例暂缓）。
+- ~~**临时方案**~~ 已不需要；1.1.0 前 lego 暂缓的问题随之解除。
 
 ## 新能力采纳进度（occt.ts 0.10.0 / 1.0.0）
 

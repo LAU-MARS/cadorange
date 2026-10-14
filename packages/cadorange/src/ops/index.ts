@@ -126,6 +126,28 @@ export function draft(
   );
 }
 
+/**
+ * Projects a wire/edge onto a surface along `direction` (build123d
+ * `project`) — an engraving curve on the target. `onto` takes a face view
+ * (e.g. `part.faces().filterBy(Axis.Z).last()`) or any face/shell shape.
+ */
+export function project(shape: Shape, onto: Shape | Face, opts: { direction: Vec3 }): ShapeValue {
+  const kernel = getKernel();
+  // a Face view carries parent+index, not its own handle — resolve it
+  const handle =
+    onto instanceof ShapeValue
+      ? onto.handle
+      : kernel.subShapes((onto as Face).parent.handle, "Face")[(onto as Face).index - 1];
+  if (!handle) {
+    throw new Error("project: could not resolve the target face handle.");
+  }
+  return record(
+    "project",
+    {},
+    () => new ShapeValue(kernel.project(shape.handle, handle, opts.direction)),
+  );
+}
+
 /** Minimum distance between two shapes (build123d `topo_distance_to`). */
 export function distance(a: Shape, b: Shape): number {
   return getKernel().distance(a.handle, b.handle);

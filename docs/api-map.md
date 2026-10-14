@@ -36,12 +36,12 @@
 | `RegularPolygon`, `Polygon`, `Triangle`, `Trapezoid` | `RegularPolygon`/`Polygon`（0.6.0） | **M0.5✅** | Triangle/Trapezoid 用 Polygon 组合（M2 语法糖） |
 | `SlotCenterToCenter` | 同名（0.6.0） | **M0.5✅** | 其余 Slot 变体 M2 |
 | `Line`, `Polyline`, `ThreePointArc`, `RadiusArc`, `CenterArc` | 同名（0.6.0） | **M0.5✅** | 弧系纯 TS 数学（三点定圆/劣弧选取）下推 kernel makeArc |
-| `SagittaArc`, `JernArc`, `PolarLine`, `IntersectingLine`, `Helix`, `Spline`, `BSpline`, `Bezier` | — | M2 | kernel 有 `makeBspline(Through)`/`makeHelix` 待桥接 |
+| `SagittaArc`, `JernArc`, `PolarLine`, `IntersectingLine`, `Helix`, `Spline`, `BSpline`, `Bezier`, `EllipticalCenterArc`, `EllipticalStartArc` | 同名（0.9.0） | **0.9✅** | 椭圆弧/Bezier 由 occt.ts 1.1.0 解析曲线支撑 |
 | `extrude(sketch, amount)` | `extrude(profile, amount)`（0.6.0） | **M0.5✅** | Wire 记忆草图平面，沿法向；`dir` 可覆写 |
 | `revolve(sketch, axis)` | `revolve(profile, axis, angle?)`（0.6.0） | **M0.5✅** | 截面须在含轴平面 |
 | `make_face` | `faceOf(outer, holes)`（0.6.0） | **M0.5✅** | 2D 布尔 = face 上常规布尔 |
 | `GridLocations` | `gridLocations`（0.6.0） | **M0.5✅** | 返回 `[u,v]` 数组，配 `at` 使用 |
-| 2D `offset(sketch, dist)` | — | M2 | kernel 缺 2D wire 偏置（需求 R14） |
+| 2D `offset(sketch, dist)` | `offsetWire(wire, dist, {join})`（0.9.0） | **0.9✅** | R14 已解；lego 语料逐位对拍 |
 | `Text`, `Draft`(制图), `DimensionLine` 系 | — | M3 | drafting 整组后置 |
 
 ## 操作（operations_part / generic）
@@ -161,6 +161,7 @@ parity 22/22（新增 loft/offset/hole/wedge/ellipse 用例）。
   import_stl、edges_to_wires/new_edges/topo_explore_*、polar/delta 工具
 
 ### 语义差异补充
+0. **project 的 target**：kernel 要求 Face/Shell；cadorange `project()` 接受 `Shape` 或面视图（自动解包父句柄）。
 9. **shell vs offset**：occt.ts `shell` 是"挖内腔保外皮"；build123d
    `shell(-t)` 是整体内缩。整体内缩用 cadorange `offset(s, distance)`。
 10. **凹凸分类**：tangent-blend 边（σ≈180°）我们判 smooth；build123d

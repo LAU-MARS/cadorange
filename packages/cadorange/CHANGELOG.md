@@ -1,5 +1,18 @@
 # cadorange
 
+## 0.9.0
+
+### Minor Changes
+
+- Adopt occt.ts 1.1.0 — R14 (2D sketch offset) and R15 (ellipse arcs, Bezier, project) land; the lego corpus translates.
+  
+  - `offsetWire(wire, distance, { join: "arc" | "tangent" | "intersection" })` — the build123d sketch `offset` idiom (wall construction); 3D solids keep using `offset(shape, distance)`
+  - `EllipticalCenterArc` / `EllipticalStartArc` — analytic ellipse arcs (kernel reports `"ellipse"`, re-editable)
+  - `Bezier(poles, { weights })` — optional weights give exact rational conics
+  - `project(wire, onto, { direction })` — engraving curves on a face; accepts face views directly (parent handle resolved automatically)
+  - **Corpus**: `examples/lego.ts` — the R14 showcase, parity-verified to the digit against Python build123d (volume 3076.4928, faces/edges exact); examples now resolve the `cadorange` self-import via tsconfig paths and a vitest alias, so corpus files are testable as-is
+  - Requirements ledger: R14/R15 resolved; R16 (raw types) still open; R17 (assembly transform round-trip) re-verified as unfixed in 1.1.0 — the baking workaround stays
+
 ## 0.8.1
 
 ### Patch Changes

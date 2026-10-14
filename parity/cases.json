@@ -465,6 +465,16 @@
         }
       ],
       "result": "a"
+    },
+    {
+      "name": "lego",
+      "ops": [
+        {
+          "op": "lego",
+          "id": "a"
+        }
+      ],
+      "result": "a"
     }
   ]
 }

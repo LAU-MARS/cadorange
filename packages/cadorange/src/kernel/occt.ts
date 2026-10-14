@@ -241,6 +241,42 @@ class OcctKernel implements Kernel {
     return this.#adopt(this.#occ.makeHelix(radius, pitch, height));
   }
 
+  makeEllipseArc(
+    majorRadius: number,
+    minorRadius: number,
+    origin: Vec3,
+    normal: Vec3,
+    startDegrees: number,
+    endDegrees: number,
+  ): ShapeHandle {
+    return this.#adopt(
+      this.#occ.makeEllipseArc(majorRadius, minorRadius, {
+        origin,
+        normal,
+        startDegrees,
+        endDegrees,
+      }),
+    );
+  }
+
+  makeBezier(poles: readonly Vec3[], weights?: readonly number[]): ShapeHandle {
+    return this.#adopt(
+      this.#occ.makeBezier(poles, weights !== undefined ? { weights } : undefined),
+    );
+  }
+
+  offsetWire(
+    profile: ShapeHandle,
+    distance: number,
+    join: "arc" | "tangent" | "intersection",
+  ): ShapeHandle {
+    return this.#adopt(this.#occ.offsetWire(this.#raw(profile), distance, { join }));
+  }
+
+  project(shape: ShapeHandle, target: ShapeHandle, direction: Vec3): ShapeHandle {
+    return this.#adopt(this.#occ.project(this.#raw(shape), this.#raw(target), { direction }));
+  }
+
   loft(sections: readonly ShapeHandle[], ruled: boolean): ShapeHandle {
     return this.#adopt(
       this.#occ.loft(

@@ -61,6 +61,7 @@ export {
   loft,
   mirror,
   offset,
+  project,
   revolve,
   rotate,
   scale,
@@ -77,12 +78,15 @@ export type { Selector, SubShape } from "./selectors";
 export { parseSelector } from "./selectors";
 export type { SketchOpts } from "./sketch";
 export {
+  Bezier,
   BSpline,
   CenterArc,
   Circle,
   ConicArc,
   combineWires,
   Ellipse,
+  EllipticalCenterArc,
+  EllipticalStartArc,
   FilletPolyline,
   faceOf,
   gridLocations,
@@ -90,6 +94,7 @@ export {
   IntersectingLine,
   JernArc,
   Line,
+  offsetWire,
   PolarLine,
   Polygon,
   Polyline,

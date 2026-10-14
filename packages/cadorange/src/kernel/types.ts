@@ -166,6 +166,25 @@ export interface Kernel {
   makeBsplineThrough(points: readonly Vec3[], periodic?: boolean): ShapeHandle;
   /** Helix wire of `radius`, climbing `pitch` per turn up to `height`. */
   makeHelix(radius: number, pitch: number, height: number): ShapeHandle;
+  /** Ellipse arc from `startDegrees` to `endDegrees` CCW (span < 360°). */
+  makeEllipseArc(
+    majorRadius: number,
+    minorRadius: number,
+    origin: Vec3,
+    normal: Vec3,
+    startDegrees: number,
+    endDegrees: number,
+  ): ShapeHandle;
+  /** Bezier wire through control poles; optional weights make it rational (exact conics). */
+  makeBezier(poles: readonly Vec3[], weights?: readonly number[]): ShapeHandle;
+  /** 2D sketch offset of a planar profile (build123d sketch `offset`). */
+  offsetWire(
+    profile: ShapeHandle,
+    distance: number,
+    join: "arc" | "tangent" | "intersection",
+  ): ShapeHandle;
+  /** Projects a wire/edge onto a surface along `direction` (engraving curves). */
+  project(shape: ShapeHandle, target: ShapeHandle, direction: Vec3): ShapeHandle;
   /** Cap a planar outer wire into a face, with optional inner hole wires. */
   makeFace(outer: ShapeHandle, holes: readonly ShapeHandle[]): ShapeHandle;
   /** Extrude a planar profile (wire or face) along `vector` into a solid. */

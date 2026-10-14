@@ -95,6 +95,43 @@ def build(op: dict, shapes: dict):
         return base.cut(prism)
     elif kind == "sketchEllipse":
         return bd.Ellipse(op["major"], op["minor"])
+    elif kind == "lego":
+        unit = 8
+        pip_count = 6
+        block_length = unit * pip_count
+        block_width = 16
+        wall = 1.2
+        pip_height = 1.8
+        pip_diameter = 4.8
+        support_outer = 6.5
+        support_inner = 4.8
+        ridge_width = 0.6
+        ridge_depth = 0.3
+        base_height = 9.6
+        plan = bd.Rectangle(block_length, block_width)
+        plan -= bd.offset(plan, -wall, kind=bd.Kind.INTERSECTION)
+        for loc in bd.GridLocations(0, unit, 1, 2):
+            plan += loc * bd.Rectangle(block_length, ridge_width)
+        for loc in bd.GridLocations(unit, 0, pip_count, 1):
+            plan += loc * bd.Rectangle(ridge_width, block_width)
+        plan -= bd.Rectangle(
+            block_length - 2 * (wall + ridge_depth),
+            block_width - 2 * (wall + ridge_depth),
+        )
+        for loc in bd.GridLocations(unit, 0, pip_count - 1, 1):
+            ring = bd.Circle(support_outer / 2) - bd.Circle(support_inner / 2)
+            plan += loc * ring
+        part = bd.extrude(plan, amount=base_height - wall)
+        part += bd.Pos(0, 0, part.vertices().sort_by().last.Z) * bd.Box(
+            block_length, block_width, wall
+        )
+        top_z = base_height
+        for loc in bd.GridLocations(unit, unit, pip_count, 2):
+            part += bd.Pos(loc.position.X, loc.position.Y, top_z) * bd.Cylinder(
+                pip_diameter / 2, pip_height,
+                align=(bd.Align.CENTER, bd.Align.CENTER, bd.Align.MIN),
+            )
+        return part
     elif kind == "assemblyRoundtrip":
         import os
         import tempfile

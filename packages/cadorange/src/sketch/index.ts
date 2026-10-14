@@ -586,6 +586,81 @@ export function ConicArc(
   return Spline(pts, opts);
 }
 
+/** Ellipse arc around `center` from `startAngle` CCW by `arcSize` degrees (build123d `EllipticalCenterArc`). */
+export function EllipticalCenterArc(
+  center: readonly [number, number],
+  majorRadius: number,
+  minorRadius: number,
+  startAngle: number,
+  arcSize: number,
+  opts?: SketchOpts,
+): Wire {
+  const f = frameOf(opts);
+  const origin = local(f, center, opts);
+  return record("sketchEllipseArc", { majorRadius, minorRadius, arcSize }, () =>
+    wireFromKernel(
+      getKernel().makeEllipseArc(
+        majorRadius,
+        minorRadius,
+        origin,
+        f.normal,
+        startAngle,
+        startAngle + arcSize,
+      ),
+      planeOfFrame(f),
+    ),
+  );
+}
+
+/**
+ * Ellipse arc through two points on an ellipse centered at `center`
+ * (build123d `EllipticalStartArc`; angles derived from the points).
+ */
+export function EllipticalStartArc(
+  start: readonly [number, number],
+  end: readonly [number, number],
+  majorRadius: number,
+  minorRadius: number,
+  opts?: { center?: readonly [number, number] } & SketchOpts,
+): Wire {
+  const c = opts?.center ?? [0, 0];
+  const at = (p: readonly [number, number]): number => {
+    const a = (Math.atan2(p[1] - c[1], p[0] - c[0]) * 180) / Math.PI;
+    return a;
+  };
+  const startAngle = at(start);
+  const sweep = (at(end) - startAngle + 360) % 360;
+  return EllipticalCenterArc(c, majorRadius, minorRadius, startAngle, sweep, opts);
+}
+
+/** Bezier through control poles (build123d `Bezier`); weights make it rational (exact conic arcs). */
+export function Bezier(
+  poles: readonly (readonly [number, number])[],
+  opts?: { weights?: readonly number[] } & SketchOpts,
+): Wire {
+  const f = frameOf(opts);
+  const world = poles.map((p) => local(f, p, opts));
+  return record("sketchBezier", { poles: world.length }, () =>
+    wireFromKernel(getKernel().makeBezier(world, opts?.weights), planeOfFrame(f)),
+  );
+}
+
+/**
+ * 2D sketch offset of a planar profile (build123d sketch `offset`, the
+ * wall-thickness idiom `plan -= offset(plan, -t)`); 3D solids use
+ * `offset(shape, distance)` instead. Corners resolve by `join`.
+ */
+export function offsetWire(
+  profile: Wire,
+  distance: number,
+  opts?: { join?: "arc" | "tangent" | "intersection" } & SketchOpts,
+): Wire {
+  const plane = profile.plane;
+  return record("sketchOffset", { distance, join: opts?.join ?? "arc" }, () =>
+    wireFromKernel(getKernel().offsetWire(profile.handle, distance, opts?.join ?? "arc"), plane),
+  );
+}
+
 /** Helix wire (build123d `Helix`) — 3D, around the +Z axis. */
 export function Helix(radius: number, pitch: number, height: number): Wire {
   return record("sketchHelix", { radius, pitch, height }, () =>
