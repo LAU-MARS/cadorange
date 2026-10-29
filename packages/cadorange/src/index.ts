@@ -6,18 +6,44 @@
  * fluent facade. Mapping details: docs/api-map.md.
  */
 
+export type {
+  AddOpts,
+  AssemblyInit,
+  FrameInput,
+  JointAxis,
+  JointKind,
+  JointValue,
+  Range,
+} from "./assembly";
+export {
+  Assembly,
+  BallJoint,
+  CylindricalJoint,
+  Joint,
+  LinearJoint,
+  PlanarJoint,
+  PolarJoint,
+  RevoluteJoint,
+  RigidJoint,
+} from "./assembly";
 export type { Axis3, AxisName, BBox, Color, Loc, Mat3, Mesh, Placement, Plane, Vec3 } from "./geom";
 export {
   Axis,
+  apply34,
   axisByName,
   color,
   Location,
+  locationToMat34,
   m3apply,
   mat3ToAxisAngle,
+  mat3ToLocation,
+  mat34ToLocation,
   mul3,
+  mul34,
   Pos,
   planeFrom,
   Rot,
+  rotationAbout,
   transpose3,
   v,
 } from "./geom";

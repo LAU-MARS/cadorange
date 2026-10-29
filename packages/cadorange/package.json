@@ -74,7 +74,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "occt.ts": "^1.1.0"
+    "occt.ts": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.4"

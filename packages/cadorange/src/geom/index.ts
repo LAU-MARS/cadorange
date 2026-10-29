@@ -226,6 +226,31 @@ export function mat3ToAxisAngle(a: Mat3): { axis: Vec3; angleDegrees: number } {
   return { axis, angleDegrees: (angle * 180) / Math.PI };
 }
 
+/** Rotation matrix -> Location (columns become zDir/xDir). */
+export function mat3ToLocation(r: Mat3): Location {
+  return new Location([0, 0, 0], [r[0][2], r[1][2], r[2][2]], [r[0][0], r[1][0], r[2][0]]);
+}
+
+/**
+ * Rotation by `angleDegrees` about `axis` (Rodrigues), a full `Location`
+ * (handles the axis not passing through the origin). build123d `Location(
+ * plane=Plane(axis), angle=...)`.
+ */
+export function rotationAbout(axis: Axis, angleDegrees: number): Location {
+  const k = v.normalize(axis.direction);
+  const a = (angleDegrees * Math.PI) / 180;
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  const t = 1 - c;
+  const r: Mat3 = [
+    [c + k[0] * k[0] * t, k[0] * k[1] * t - k[2] * s, k[0] * k[2] * t + k[1] * s],
+    [k[1] * k[0] * t + k[2] * s, c + k[1] * k[1] * t, k[1] * k[2] * t - k[0] * s],
+    [k[2] * k[0] * t - k[1] * s, k[2] * k[1] * t + k[0] * s, c + k[2] * k[2] * t],
+  ];
+  const o = axis.origin;
+  return new Location(o).mul(mat3ToLocation(r)).mul(new Location(v.scale(o, -1) as Vec3));
+}
+
 /* --------------------- 3x4 affine transforms (STEP) -------------------- */
 /** Row-major 3x4: [r11,r12,r13,t1, r21,r22,r23,t2, r31,r32,r33,t3]. */
 export type Mat34 = readonly number[];
@@ -270,6 +295,33 @@ export function mat34Rotation(m: Mat34): Mat3 {
 
 export function mat34Translation(m: Mat34): Vec3 {
   return [m[3] ?? 0, m[7] ?? 0, m[11] ?? 0];
+}
+
+export function locationToMat34(loc: Location): Mat34 {
+  const r = loc.rotation();
+  return [
+    r[0][0],
+    r[0][1],
+    r[0][2],
+    loc.origin[0],
+    r[1][0],
+    r[1][1],
+    r[1][2],
+    loc.origin[1],
+    r[2][0],
+    r[2][1],
+    r[2][2],
+    loc.origin[2],
+  ];
+}
+
+/** Row-major 3x4 -> Location (assumes an orthonormal rotation part). */
+export function mat34ToLocation(m: Mat34): Location {
+  return new Location(
+    [m[3] ?? 0, m[7] ?? 0, m[11] ?? 0],
+    [m[2] ?? 0, m[6] ?? 0, m[10] ?? 0],
+    [m[0] ?? 0, m[4] ?? 0, m[8] ?? 0],
+  );
 }
 
 /** RGBA color value (build123d `Color` — a plain value here, no OCCT binding). */

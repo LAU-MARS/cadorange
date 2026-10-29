@@ -92,12 +92,30 @@
 CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z <<Z`、
 `and/or/not` 组合、`r1`(半径)等——解析为同一谓词内核。
 
+## 装配对象模型与运动副（joints）
+
+| build123d | cadorange | 里程碑 | 备注 |
+| --- | --- | --- | --- |
+| `Compound`（children + locations，装配树） | `Assembly`（solid XOR children，`loc: Location`） | **0.10.0** | 运行时对象模型：`add`/`worldLoc`/`worldSolid`/`solids`/`bbox`；节点规则与 STEP 文档一致（叶子或子装配二选一） |
+| `part.joints[label] = Joint(...)` | `node.joints` · `addJoint(label, joint)` · `findJoint(label)`（子树查找 = `joint_between` 语义） | **0.10.0** | Joint 是纯放置数据（frame + value），无 label/part 构造参数 |
+| `Joint.connect_to(other, **value)` | `assembly.connectTo(child, parentLabel, childLabel, value?)` | **0.10.0** | 一次性重定位求解：`childWorld = ownerWorld ∘ Fp ∘ Mp ∘ Mc ∘ Fc⁻¹`；父端固定、子端重摆 |
+| `RigidJoint(label, part, location)` | `RigidJoint({ origin?, zDir?, xDir? } \| Location)` | **0.10.0** | frame 非正交 xDir 自动重正交 |
+| `RevoluteJoint(axis, angle, angle_reference)` | `RevoluteJoint({ origin, direction, xDir? }, { angle?, angularRange? })` | **0.10.0** | `xDir` = 零位朝向（对应 `angle_reference`）；范围校验 |
+| `LinearJoint(axis, position)` | `LinearJoint({ origin, direction, xDir? }, { linear?, linearRange? })` | **0.10.0** | |
+| `CylindricalJoint` | 同名（`{ angle?, linear? }` 螺旋副） | **0.10.0** | 旋转+沿轴平移 |
+| `BallJoint`（旧名 SphericalJoint） | `BallJoint(frame?, { angles?: [x,y,z] })` | **0.10.0** | 万向节，gimbal XYZ 欧拉角（`Rot` 约定） |
+| — | `PlanarJoint`（法向轴，`{ angle?, position?: [u,v] }`）/ `PolarJoint`（`{ angle?, radial? }`） | **0.10.0** | 平面副/极坐标副，运动在关节系内定义 |
+| connect_to 成对规则 | `PAIRINGS` 校验（错误信息列出可配对类型） | **0.10.0** | 运动副父端只能连刚性子端；例外 linear→revolute（build123d 同） |
+| — | `solve()` | **0.10.0** | 依序重放全部连接（父级先），改 `joint.angle` 后调用 = 运动研究 |
+| —（核心无此 API） | `explode(factor)` | **0.10.0** | 径向爆炸图：返回结构副本（solid 共享、连接不带走），叶心离装配中心位移 ×factor |
+| `import_step`/`export_step` 装配 | `Assembly.fromStep(doc)` · `toStep()` · `toNodes()` | **0.10.0** | 世界定位叶子 + 父相对变换（occt.ts 2.0.0 原生往返，R17 已解决） |
+
 ## 导入导出（exporters）
 
 | build123d | cadorange | 里程碑 |
 | --- | --- | --- |
 | `export_step/import_step` | `export/importStep` | **M0** |
-| 装配 STEP（label/color/实例变换/嵌套） | `importStepAssembly`/`exportStepAssembly` + `AssemblyNode` 树 | **0.8.1** | 叶子世界定位（实例变换烘焙，R17 临时方案）；STEP 颜色规范化为大写 hex |
+| 装配 STEP（label/color/实例变换/嵌套） | `importStepAssembly`/`exportStepAssembly` + `AssemblyNode` 树 | **0.8.1**，0.10.0 随 occt.ts 2.0.0 简化 | 节点 solid 局部坐标、transform 父相对，内核原生往返（`read(write(x))===x`）；读回叶子世界定位；组颜色导出时级联下移到叶子（R18）；STEP 颜色规范化为大写 hex |
 | `export_stl/import_stl` | `exportStl`（ascii 先行）/ `importStl` | **M0** / M2 |
 | `export_gltf` | `exportGlb` | **M0** |
 | `export_brep/import_brep` | 同名 | M1 |
@@ -109,7 +127,6 @@ CadQuery 字符串语法（workplane 门面专用）：`>Z <Z |Z #face #edge >>Z
 | build123d 概念 | 理由 |
 | --- | --- |
 | `BuildPart/BuildSketch/BuildLine` builder 上下文 | TS 无 with/隐式当前对象；algebra mode 是核心路线。其"隐式状态+累积操作"语义由 runtime 的 OpLog/Session 承接（后期可做映射层） |
-| `Joint` 装配关系族（Rigid/Revolute/...） | build123d 特色但非 LLM 高频；M3 后重估 |
 | `Mesher`（gmsh 集成）、`import_dxf/svg`、钣金 | 依赖面大，M3 后重估 |
 | 单位常量 `MM/IN/...`、物理属性（label 的 mass） | TS 数字字面量 + options 即可；不占 API 面 |
 

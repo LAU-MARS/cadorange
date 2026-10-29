@@ -259,10 +259,16 @@ export interface Kernel {
   /**
    * Reads a STEP assembly document: the JSON tree (names/colors/instance
    * transforms) plus every leaf adopted as a handle immediately — leaf
-   * lookups are session-scoped, so we resolve them all in one go.
+   * lookups are session-scoped, so we resolve them all in one go. Contract
+   * since occt.ts 2.0.0: node transforms are PARENT-relative and
+   * `read(write(tree)) === tree` holds; adopted leaves are world-positioned.
    */
   readStepDocument(data: Uint8Array): { tree: DocNode[]; shapes: ShapeHandle[] };
-  /** Writes an assembly STEP document back. */
+  /**
+   * Writes an assembly STEP document back. Node transforms are
+   * parent-relative at every depth. Colors belong to shape (leaf) nodes —
+   * a color on a group node throws (occt.ts 2.0.0).
+   */
   writeStepDocument(nodes: readonly ExportDocNode[]): Uint8Array;
   importBrep(data: Uint8Array): ShapeHandle;
   exportBrep(s: ShapeHandle): Uint8Array;

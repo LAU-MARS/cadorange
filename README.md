@@ -29,6 +29,7 @@ cadorange is a code-CAD kernel and runtime built for AI agents. It runs anywhere
 - **Headless rendering.** Multi-view PNG/SVG renders without a GPU or a browser window, so vision models can check their own work.
 - **Deterministic output.** The same code produces the same geometry, hashes and renders. This makes it suitable for evals and RL.
 - **Introspection.** `describe()` returns volumes, bounding boxes, face and edge counts and topology summaries as plain JSON.
+- **Assemblies & joints.** A runtime part tree (`Assembly`) plus the build123d joint family — rigid, revolute, linear, cylindrical, ball, planar, polar. `connectTo` solves part placements, `solve()` replays them for motion studies, `explode()` produces exploded views, and the whole tree round-trips through STEP with names, colors and instance transforms.
 - **Embeddable.** It runs in-process, with no Python, no conda, no subprocess and no server required.
 
 It works as a plain library, as a CLI (`cado`) or as an MCP server. That means it can plug into Claude Code, Codex, dsh and any other MCP-capable agent.

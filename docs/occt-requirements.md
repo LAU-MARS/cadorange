@@ -152,18 +152,25 @@ cadorange 在需求落地前会采用表中标注的临时方案。
 - **cadorange 临时方案**：`cadorange/occt` 自声明结构化 `RawShape` 接口
   （isNull/shapeType/isSame/isEqual/delete 稳定面）。
 
-### R17 writeStepDocument 的 transform 不生效（P1，2026-10-14 实测）
+### R17 writeStepDocument 的 transform 不生效 ✅ 已解决（2.0.0；cadorange 0.10.0 已采纳）
 
-- **证据**：`writeStepDocument([{name, shape, transform:[平移40]}])` →
-  `readStepDocument` 读回，`documentShape(0)` 的 bbox 仍是原始位置；**1.1.0
-  复测：树上的 transform 也读回为 null（写侧丢失），仍未修**。
-- **影响**：装配实例位置在 round-trip 中丢失。
-- **cadorange 临时方案**：io 层双向烘焙——读侧把树上的累计 transform
-  （rotate+translate）烘到叶子（对齐 build123d import_step 的世界定位
-  语义）；写侧把 transform 先烘焙再写。内核修复后可去烘焙（内部实现细节，
-  API 不变）。
-- **另**：writeStepDocument 节点不能同时带 shape 和 children（装配/叶子
-  二选一），建议在 .d.ts 注明。
+- **原证据**（1.1.0）：顶层节点 transform 写入被静默丢弃；读侧树变换为"相对根"（XCAF 绝对链），与写侧"父相对"不对称；带 TopLoc 的 shape 写顶层被拆成 `"SOLID"` 子节点。
+- **2.0.0 行为**（探针复测）：顶层/嵌套 transform 一律原生往返；树变换统一为**父相对**，
+  `read(write(tree)) === tree` 成为钉死契约；带 TopLoc 的 shape 写出时折为节点自身
+  的实例变换（不再拆 SOLID 子节点）。
+- **cadorange 采纳**（0.10.0）：io 层拆除全部补偿（根相对归一化、顶层单形状 STEP
+  往返烘焙、顶层组变换折叠）——`exportStepAssembly` 统一透传局部 solid + 父相对
+  transform；`importStepAssembly` 直接采用读出值（undefined 归一化为 null）。
+  geom 的 `inv34` 随补偿逻辑一并移除。
+
+### R18 assembly 节点 color 会 throw（2.0.0 行为变更，已采纳）
+
+- **行为**：`writeStepDocument` 上组（children）节点带 `color` 直接 throw：
+  "colors apply to shape nodes, not assemblies"（1.1.0 为静默行为）。
+- **cadorange 方案**（0.10.0）：STEP 颜色本就属于表示项（shape 节点）；
+  `exportStepAssembly` 把组颜色**级联下移**到未着色的叶子（叶子自身颜色优先），
+  组节点不再向内核传 color。`AssemblyNode.color` 字段语义不变（组颜色在导出时
+  生效于叶子），round-trip 后颜色落在叶子上。
 
 ### R15 椭圆弧 / Bezier / project ✅ 已解决(1.1.0；cadorange 0.9.0 已采纳)
 
